@@ -6,7 +6,9 @@ const PROTECTED = [
   /^\/dashboard(\/.*)?$/,
   /^\/setup(\/.*)?$/,
   /^\/api\/checkout(\/.*)?$/,
-  /^\/api\/courses\/generate(\/.*)?$/,
+  /^\/api\/courses(\/.*)?$/,
+  /^\/api\/generate-course(\/.*)?$/,
+  /^\/api\/module-chat(\/.*)?$/,
 ];
 
 function getSecret(): Uint8Array | null {
@@ -64,7 +66,11 @@ export const config = {
     "/setup/:path*",
     "/api/checkout",
     "/api/checkout/:path*",
-    "/api/courses/generate",
-    "/api/courses/generate/:path*",
+    "/api/courses",
+    "/api/courses/:path*",
+    "/api/generate-course",
+    "/api/generate-course/:path*",
+    "/api/module-chat",
+    "/api/module-chat/:path*",
   ],
 };

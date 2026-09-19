@@ -10,6 +10,7 @@ import {
 } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import type { SyllabusOutline } from "@/lib/types";
+import { savePendingCourse } from "@/lib/generation-client";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
 import { SyllabusOutlineView } from "@/components/SyllabusOutlineView";
 
@@ -168,6 +169,7 @@ export function OnboardingWizard({
 
       const data = (await response.json()) as {
         url?: string;
+        courseId?: string;
         error?: string;
       };
 
@@ -180,6 +182,17 @@ export function OnboardingWizard({
 
       if (!response.ok || !data.url) {
         throw new Error(data.error ?? "Unable to start checkout.");
+      }
+
+      // Carry the brain dump + outline across the Stripe redirect so the
+      // post-payment setup page can feed them to the multi-agent pipeline.
+      if (data.courseId) {
+        savePendingCourse({
+          courseId: data.courseId,
+          brainDump: syllabus.rawBrainDump ?? buildBrainDump(brainDump, primaryGoal),
+          outline: syllabus,
+          savedAt: new Date().toISOString(),
+        });
       }
 
       window.location.href = data.url;
