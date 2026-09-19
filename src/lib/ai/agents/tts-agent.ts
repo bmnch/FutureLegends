@@ -4,8 +4,8 @@ import type { NarrationMeta, TtsProvider } from "@/lib/types";
  * TTS Agent (documented stub)
  * ---------------------------
  * Converts a block of narration text into an audio URL. The pipeline is fully
- * wired for real audio — every text block and the per-module narration block
- * carry an `audio_url` — but this implementation deliberately returns a
+ * wired for real audio - every text block and the per-module narration block
+ * carry an `audio_url` - but this implementation deliberately returns a
  * deterministic placeholder URL so the rest of the system can be built and
  * tested without incurring TTS cost or needing object storage.
  *
@@ -15,7 +15,7 @@ import type { NarrationMeta, TtsProvider } from "@/lib/types";
  *
  * ## Wiring a real provider
  *
- * ### Option A — Cloudflare Workers AI · Deepgram Aura-2 (no extra vendor)
+ * ### Option A - Cloudflare Workers AI · Deepgram Aura-2 (no extra vendor)
  * ```ts
  * const { env } = await getCloudflareContext({ async: true });
  * const mp3 = await env.AI.run("@cf/deepgram/aura-2-en", {
@@ -33,7 +33,7 @@ import type { NarrationMeta, TtsProvider } from "@/lib/types";
  * Requires an R2 binding (`[[r2_buckets]] binding = "AUDIO_BUCKET"`) plus a
  * public bucket domain, and `env.d.ts` additions.
  *
- * ### Option B — ElevenLabs
+ * ### Option B - ElevenLabs
  * ```ts
  * const res = await fetch(
  *   `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_128`,
@@ -84,7 +84,7 @@ export const VOICE_MAP: Record<string, { deepgram: string; elevenlabs: string }>
 
 const PLACEHOLDER_BASE_URL = "https://audio.civior.ai/placeholder";
 
-/** Fast, dependency-free FNV-1a hash — stable across runs for cache keys. */
+/** Fast, dependency-free FNV-1a hash - stable across runs for cache keys. */
 export function stableHash(input: string): string {
   let hash = 0x811c9dc5;
   for (let i = 0; i < input.length; i += 1) {

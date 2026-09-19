@@ -33,13 +33,13 @@ async function register(body: AuthBody) {
 
   if (!email || !isValidEmail(email)) {
     return NextResponse.json(
-      { error: "A valid email is required." },
+      { error: "That email does not look right. Check it and try again." },
       { status: 400 },
     );
   }
   if (password.length < 8) {
     return NextResponse.json(
-      { error: "Password must be at least 8 characters." },
+      { error: "Passwords need at least 8 characters." },
       { status: 400 },
     );
   }
@@ -53,7 +53,7 @@ async function register(body: AuthBody) {
 
   if (existing[0]) {
     return NextResponse.json(
-      { error: "An account with this email already exists." },
+      { error: "You already have an account with this email. Log in instead." },
       { status: 409 },
     );
   }
@@ -73,7 +73,7 @@ async function register(body: AuthBody) {
   const token = await signToken({ sub: id, email });
 
   return NextResponse.json(
-    { ok: true, user: { id, email } },
+    { ok: true, user: { id, email, plan: "free" as const } },
     {
       status: 201,
       headers: { "Set-Cookie": buildSessionCookie(token) },
@@ -87,7 +87,7 @@ async function login(body: AuthBody) {
 
   if (!email || !password) {
     return NextResponse.json(
-      { error: "Email and password are required." },
+      { error: "Enter your email and password." },
       { status: 400 },
     );
   }
@@ -102,7 +102,7 @@ async function login(body: AuthBody) {
   const user = rows[0];
   if (!user) {
     return NextResponse.json(
-      { error: "Invalid email or password." },
+      { error: "That email and password do not match. Try again." },
       { status: 401 },
     );
   }
@@ -110,7 +110,7 @@ async function login(body: AuthBody) {
   const valid = await verifyPassword(password, user.passwordHash, user.salt);
   if (!valid) {
     return NextResponse.json(
-      { error: "Invalid email or password." },
+      { error: "That email and password do not match. Try again." },
       { status: 401 },
     );
   }
@@ -118,7 +118,10 @@ async function login(body: AuthBody) {
   const token = await signToken({ sub: user.id, email: user.email });
 
   return NextResponse.json(
-    { ok: true, user: { id: user.id, email: user.email } },
+    {
+      ok: true,
+      user: { id: user.id, email: user.email, plan: user.plan ?? "free" },
+    },
     {
       headers: { "Set-Cookie": buildSessionCookie(token) },
     },
@@ -142,9 +145,20 @@ async function session() {
       return NextResponse.json({ authenticated: false });
     }
     const payload = await verifyToken(token);
+    // Re-read plan from D1 so premium upgrades take effect without re-login.
+    const db = await getDb();
+    const rows = await db
+      .select({ plan: users.plan })
+      .from(users)
+      .where(eq(users.id, payload.sub))
+      .limit(1);
     return NextResponse.json({
       authenticated: true,
-      user: { id: payload.sub, email: payload.email },
+      user: {
+        id: payload.sub,
+        email: payload.email,
+        plan: rows[0]?.plan ?? "free",
+      },
     });
   } catch {
     return NextResponse.json({ authenticated: false });

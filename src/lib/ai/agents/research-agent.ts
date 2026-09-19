@@ -114,8 +114,8 @@ export async function runResearchAgent(
   input: ResearchAgentInput,
 ): Promise<{ facts: ResearchFacts; model: string }> {
   const outlineHint = input.outline
-    ? `\n\nThe learner already previewed this syllabus outline and paid for it — keep your research aligned with these modules:\n${input.outline.modules
-        .map((m, i) => `${i + 1}. ${m.title} — ${m.description}`)
+    ? `\n\nThe learner already previewed this syllabus outline and paid for it - keep your research aligned with these modules:\n${input.outline.modules
+        .map((m, i) => `${i + 1}. ${m.title} - ${m.description}`)
         .join("\n")}`
     : "";
 
@@ -152,7 +152,7 @@ export function renderFactsForPrompt(facts: ResearchFacts): string {
     "FACTUAL CONSTRAINTS (respect these exactly; phrase low-confidence items as 'confirm with ...'):",
     ...facts.constraints.map(
       (c, i) =>
-        `${i + 1}. [${c.confidence.toUpperCase()}] ${c.topic}: ${c.fact} — why: ${c.whyItMatters} — verify with: ${c.verifyWith}`,
+        `${i + 1}. [${c.confidence.toUpperCase()}] ${c.topic}: ${c.fact} - why: ${c.whyItMatters} - verify with: ${c.verifyWith}`,
     ),
   ];
   if (facts.openQuestions.length > 0) {

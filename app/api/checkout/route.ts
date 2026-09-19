@@ -1,5 +1,9 @@
+import { eq } from "drizzle-orm";
 import Stripe from "stripe";
 import type { SyllabusOutline } from "@/lib/types";
+import { getDb } from "@/src/db";
+import { users } from "@/src/db/schema";
+import { getSessionUser } from "@/src/lib/auth-session";
 
 // Workers already executes at the edge; @opennextjs/cloudflare cannot load
 // Next.js `edge` runtime bundles, so route handlers must stay on nodejs.
@@ -7,6 +11,34 @@ export const runtime = "nodejs";
 
 export async function POST(request: Request) {
   try {
+    const sessionUser = await getSessionUser();
+    if (!sessionUser) {
+      return Response.json({ error: "Please log in first." }, { status: 401 });
+    }
+
+    const body = (await request.json()) as { syllabus?: SyllabusOutline };
+    if (!body.syllabus) {
+      return Response.json({ error: "syllabus is required." }, { status: 400 });
+    }
+
+    const origin = new URL(request.url).origin;
+    const courseId = crypto.randomUUID();
+
+    // Premium accounts skip Stripe and go straight to the setup / generate flow.
+    const db = await getDb();
+    const rows = await db
+      .select({ plan: users.plan })
+      .from(users)
+      .where(eq(users.id, sessionUser.id))
+      .limit(1);
+    if (rows[0]?.plan === "premium") {
+      return Response.json({
+        url: `${origin}/setup/${courseId}`,
+        courseId,
+        skippedCheckout: true,
+      });
+    }
+
     const secretKey = process.env.STRIPE_SECRET_KEY;
     if (!secretKey) {
       return Response.json(
@@ -15,18 +47,10 @@ export async function POST(request: Request) {
       );
     }
 
-    const body = (await request.json()) as { syllabus?: SyllabusOutline };
-    if (!body.syllabus) {
-      return Response.json({ error: "syllabus is required." }, { status: 400 });
-    }
-
     const stripe = new Stripe(secretKey, {
       apiVersion: "2026-08-26.dahlia",
       httpClient: Stripe.createFetchHttpClient(),
     });
-
-    const origin = new URL(request.url).origin;
-    const courseId = crypto.randomUUID();
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
@@ -48,17 +72,18 @@ export async function POST(request: Request) {
       ],
       metadata: {
         courseId,
+        userId: sessionUser.id,
         syllabusTitle: body.syllabus.courseTitle?.slice(0, 400) ??
           body.syllabus.title?.slice(0, 400) ??
           "CiviorAI Course",
-        // Compact pointer — full syllabus should be stored server-side in production.
+        // Compact pointer - full syllabus should be stored server-side in production.
         brainDumpPreview: (body.syllabus.rawBrainDump ?? "").slice(0, 450),
       },
     });
 
     if (!session.url) {
       return Response.json(
-        { error: "Stripe did not return a checkout URL." },
+        { error: "Checkout did not start. Try again in a moment." },
         { status: 502 },
       );
     }

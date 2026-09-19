@@ -9,7 +9,7 @@ export const runtime = "nodejs";
 const MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
 
 const SYSTEM_PROMPT =
-  "You are CiviorAI, a master curriculum architect. Based on the user's context, generate a highly specific, localized, and actionable 3-module syllabus. You MUST return ONLY valid JSON matching this exact structure: { \"courseTitle\": \"string\", \"modules\": [ { \"title\": \"string\", \"description\": \"string\", \"estimatedMinutes\": number, \"topics\": [\"string\", \"string\"] } ] }. Do not include markdown formatting, backticks, or conversational text. Output pure JSON.";
+  "You are CiviorAI, a master curriculum architect. Write titles and descriptions in a warm, plain, conversational voice. Never use em dashes. Based on the user's context, generate a highly specific, localized, and actionable 3-module syllabus. You MUST return ONLY valid JSON matching this exact structure: { \"courseTitle\": \"string\", \"modules\": [ { \"title\": \"string\", \"description\": \"string\", \"estimatedMinutes\": number, \"topics\": [\"string\", \"string\"] } ] }. Do not include markdown formatting, backticks, or conversational text. Output pure JSON.";
 
 // Workers AI models differ: some return `response` as a JSON string, newer ones
 // return an already-decoded object.
@@ -42,22 +42,22 @@ function normalizeSyllabus(
 
   const rawModules = Array.isArray(parsed.modules) ? parsed.modules : [];
   const modules = rawModules.map((item) => {
-    const module = (item ?? {}) as Record<string, unknown>;
-    const topics = Array.isArray(module.topics)
-      ? module.topics.filter((t): t is string => typeof t === "string")
+    const entry = (item ?? {}) as Record<string, unknown>;
+    const topics = Array.isArray(entry.topics)
+      ? entry.topics.filter((t): t is string => typeof t === "string")
       : [];
 
     return {
-      title: typeof module.title === "string" ? module.title : "Untitled module",
+      title: typeof entry.title === "string" ? entry.title : "Untitled module",
       description:
-        typeof module.description === "string"
-          ? module.description
-          : typeof module.summary === "string"
-            ? module.summary
+        typeof entry.description === "string"
+          ? entry.description
+          : typeof entry.summary === "string"
+            ? entry.summary
             : "",
       estimatedMinutes:
-        typeof module.estimatedMinutes === "number"
-          ? module.estimatedMinutes
+        typeof entry.estimatedMinutes === "number"
+          ? entry.estimatedMinutes
           : 30,
       topics,
     };
@@ -111,7 +111,7 @@ export async function POST(request: Request) {
     const response = result?.response;
     if (!response || (typeof response === "string" && !response.trim())) {
       return NextResponse.json(
-        { error: "Workers AI returned an empty response." },
+        { error: "Our AI came back empty. Try again in a moment." },
         { status: 500 },
       );
     }
@@ -124,7 +124,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           error:
-            "Failed to parse syllabus JSON from the model. Please try again.",
+            "We could not read the plan our AI wrote. Try again.",
         },
         { status: 500 },
       );
@@ -132,7 +132,7 @@ export async function POST(request: Request) {
 
     if (!parsed || typeof parsed !== "object") {
       return NextResponse.json(
-        { error: "Syllabus payload was not a valid JSON object." },
+        { error: "We could not read the plan our AI wrote. Try again." },
         { status: 500 },
       );
     }
@@ -149,7 +149,7 @@ export async function POST(request: Request) {
         error:
           error instanceof Error
             ? error.message
-            : "Failed to generate outline.",
+            : "We could not build the outline. Try again.",
       },
       { status: 500 },
     );

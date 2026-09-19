@@ -5,11 +5,16 @@ import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 // Users
 // ---------------------------------------------------------------------------
 
+export const USER_PLANS = ["free", "premium"] as const;
+export type UserPlan = (typeof USER_PLANS)[number];
+
 export const users = sqliteTable("users", {
   id: text("id").primaryKey(),
   email: text("email").notNull().unique(),
   passwordHash: text("password_hash").notNull(),
   salt: text("salt").notNull(),
+  /** Account entitlement - premium skips Stripe checkout. */
+  plan: text("plan", { enum: USER_PLANS }).notNull().default("free"),
   createdAt: integer("created_at", { mode: "timestamp_ms" })
     .notNull()
     .$defaultFn(() => new Date()),
@@ -19,7 +24,7 @@ export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 
 // ---------------------------------------------------------------------------
-// Courses — one row per generated intensive
+// Courses - one row per generated intensive
 // ---------------------------------------------------------------------------
 
 /**
@@ -47,7 +52,7 @@ export const courses = sqliteTable(
       .default("generating"),
     /** Original brain dump the learner submitted (grounds every agent). */
     brainDump: text("brain_dump").notNull(),
-    /** Research Agent output — structured factual constraints (JSON). */
+    /** Research Agent output - structured factual constraints (JSON). */
     researchFacts: text("research_facts", { mode: "json" }).$type<
       Record<string, unknown> | null
     >(),
@@ -66,7 +71,7 @@ export type Course = typeof courses.$inferSelect;
 export type NewCourse = typeof courses.$inferInsert;
 
 // ---------------------------------------------------------------------------
-// Modules — ordered units inside a course
+// Modules - ordered units inside a course
 // ---------------------------------------------------------------------------
 
 export const modules = sqliteTable(
@@ -93,7 +98,7 @@ export type Module = typeof modules.$inferSelect;
 export type NewModule = typeof modules.$inferInsert;
 
 // ---------------------------------------------------------------------------
-// Content blocks — polymorphic JSON payload per block type
+// Content blocks - polymorphic JSON payload per block type
 // ---------------------------------------------------------------------------
 
 export const CONTENT_BLOCK_TYPES = [
@@ -114,7 +119,7 @@ export const contentBlocks = sqliteTable(
     sequenceOrder: integer("sequence_order").notNull(),
     type: text("type", { enum: CONTENT_BLOCK_TYPES }).notNull(),
     /**
-     * Discriminated by `type` — see `ContentBlockPayload` in `lib/types.ts`
+     * Discriminated by `type` - see `ContentBlockPayload` in `lib/types.ts`
      * for the exact shape of each variant.
      */
     content: text("content", { mode: "json" })
@@ -136,7 +141,7 @@ export type ContentBlock = typeof contentBlocks.$inferSelect;
 export type NewContentBlock = typeof contentBlocks.$inferInsert;
 
 // ---------------------------------------------------------------------------
-// Relations — power `db.query.courses.findFirst({ with: { modules: ... } })`
+// Relations - power `db.query.courses.findFirst({ with: { modules: ... } })`
 // on the edge without hand-written joins.
 // ---------------------------------------------------------------------------
 

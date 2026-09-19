@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import type { TtsProvider } from "@/lib/types";
+import { stripEmDashes } from "@/lib/markdown-utils";
 import { useBrowserFeature } from "@/lib/use-browser-storage";
 
 export type MediaTrack = {
@@ -59,7 +60,7 @@ function PauseIcon() {
 }
 
 /**
- * Persistent accessibility & media bar.
+ * Persistent listen bar.
  *
  * Speed is owned here so it survives track changes; everything else lives in
  * `TrackPlayer`, which is keyed by track id so its state resets per track.
@@ -73,15 +74,9 @@ export function MediaBar({ track, moduleLabel, initialSpeed = 1 }: Props) {
       initial={reduceMotion ? false : { y: 24, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-      className="glass-panel rounded-3xl bg-neutral-950/70 px-4 py-3 backdrop-blur-2xl sm:px-5"
+      className="glass-strong rounded-3xl px-4 py-3 sm:px-5"
     >
-      <TrackPlayer
-        key={track?.id ?? "none"}
-        track={track}
-        moduleLabel={moduleLabel}
-        speed={speed}
-        onSpeedChange={setSpeed}
-      />
+      <TrackPlayer key={track?.id ?? "none"} track={track} moduleLabel={moduleLabel} speed={speed} onSpeedChange={setSpeed} />
     </motion.div>
   );
 }
@@ -95,10 +90,10 @@ type TrackPlayerProps = {
 
 /**
  * Two engines share one set of controls:
- *  - `audio`  → HTMLAudioElement for real narration URLs (ElevenLabs / Aura).
- *  - `speech` → Web Speech API fallback, used while the TTS Agent is a stub
- *               (provider === "stub") or when the audio URL fails to load.
- *               Sentences are chunked so seek + speed changes are precise.
+ *  - `audio`: HTMLAudioElement for real narration URLs (ElevenLabs / Aura).
+ *  - `speech`: Web Speech API fallback, used while the TTS Agent is a stub
+ *    (provider === "stub") or when the audio URL fails to load. Sentences are
+ *    chunked so seek and speed changes are precise.
  */
 function TrackPlayer({ track, moduleLabel, speed, onSpeedChange }: TrackPlayerProps) {
   const reduceMotion = useReducedMotion();
@@ -114,7 +109,7 @@ function TrackPlayer({ track, moduleLabel, speed, onSpeedChange }: TrackPlayerPr
   const engine: "audio" | "speech" =
     track?.url && track.provider !== "stub" && !audioFailed ? "audio" : "speech";
 
-  // ── speech engine data ─────────────────────────────────────────────────
+  // speech engine data
   const sentences = useMemo(() => (track ? splitSentences(track.transcript) : []), [track]);
   const sentenceStarts = useMemo(() => {
     const starts: number[] = [];
@@ -164,7 +159,7 @@ function TrackPlayer({ track, moduleLabel, speed, onSpeedChange }: TrackPlayerPr
     [sentences, sentenceStarts],
   );
 
-  // Stop speaking when the track unmounts / changes.
+  // Stop speaking when the track unmounts or changes.
   useEffect(() => {
     return () => {
       playingRef.current = false;
@@ -172,7 +167,7 @@ function TrackPlayer({ track, moduleLabel, speed, onSpeedChange }: TrackPlayerPr
     };
   }, []);
 
-  // ── audio engine wiring (all setState calls happen in event callbacks) ──
+  // audio engine wiring (all setState calls happen in event callbacks)
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio || engine !== "audio") return;
@@ -201,7 +196,7 @@ function TrackPlayer({ track, moduleLabel, speed, onSpeedChange }: TrackPlayerPr
     if (audioRef.current) audioRef.current.playbackRate = speed;
   }, [speed]);
 
-  // ── handlers ───────────────────────────────────────────────────────────
+  // handlers
   async function togglePlay() {
     if (!track) return;
 
@@ -236,8 +231,8 @@ function TrackPlayer({ track, moduleLabel, speed, onSpeedChange }: TrackPlayerPr
   function changeSpeed(value: Speed) {
     speedRef.current = value;
     onSpeedChange(value);
-    // Restart the current sentence at the new rate — utterances can't be
-    // re-rated mid-flight.
+    // Restart the current sentence at the new rate. Utterances cannot be
+    // re-rated mid flight.
     if (engine === "speech" && playingRef.current) {
       speakFrom(sentenceIndexRef.current);
     }
@@ -285,18 +280,18 @@ function TrackPlayer({ track, moduleLabel, speed, onSpeedChange }: TrackPlayerPr
             onClick={() => skip(-15)}
             disabled={disabled}
             aria-label="Back 15 seconds"
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 text-neutral-300 transition hover:border-white/25 hover:text-white disabled:opacity-40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300"
+            className="grid h-10 w-10 place-items-center rounded-full bg-white text-ink-soft shadow-soft transition hover:text-ink disabled:opacity-40"
           >
-            <span className="font-mono text-[11px]">-15</span>
+            <span className="text-[11px] font-extrabold">-15</span>
           </button>
           <motion.button
             type="button"
             onClick={() => void togglePlay()}
             disabled={disabled}
             aria-pressed={playing}
-            aria-label={playing ? "Pause narration" : "Play narration"}
-            whileTap={reduceMotion ? undefined : { scale: 0.94 }}
-            className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-cyan-400 to-violet-400 text-neutral-950 shadow-[0_0_28px_rgba(34,211,238,0.45)] transition hover:brightness-110 disabled:opacity-40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300"
+            aria-label={playing ? "Pause" : "Play"}
+            whileTap={reduceMotion ? undefined : { scale: 0.92 }}
+            className="grid h-12 w-12 place-items-center rounded-full bg-brand-gradient text-white shadow-pop transition hover:brightness-105 disabled:opacity-40 disabled:shadow-none"
           >
             {playing ? <PauseIcon /> : <PlayIcon />}
           </motion.button>
@@ -305,24 +300,22 @@ function TrackPlayer({ track, moduleLabel, speed, onSpeedChange }: TrackPlayerPr
             onClick={() => skip(15)}
             disabled={disabled}
             aria-label="Forward 15 seconds"
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 text-neutral-300 transition hover:border-white/25 hover:text-white disabled:opacity-40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300"
+            className="grid h-10 w-10 place-items-center rounded-full bg-white text-ink-soft shadow-soft transition hover:text-ink disabled:opacity-40"
           >
-            <span className="font-mono text-[11px]">+15</span>
+            <span className="text-[11px] font-extrabold">+15</span>
           </button>
         </div>
 
         {/* Track + seek */}
         <div className="min-w-0 flex-1">
           <div className="flex items-baseline justify-between gap-3">
-            <p id={labelId} className="truncate text-sm font-medium text-white">
-              {track ? track.title : "No narration selected"}
+            <p id={labelId} className="truncate text-sm font-extrabold text-ink">
+              {track ? stripEmDashes(track.title) : "Pick a section to listen"}
             </p>
-            <p className="shrink-0 font-mono text-[10px] uppercase tracking-wider text-neutral-500">
-              {moduleLabel}
-            </p>
+            <p className="shrink-0 text-[10px] font-extrabold uppercase tracking-wider text-ink-faint">{moduleLabel}</p>
           </div>
           <label htmlFor={`${labelId}-seek`} className="sr-only">
-            Seek narration
+            Seek
           </label>
           <input
             id={`${labelId}-seek`}
@@ -340,31 +333,21 @@ function TrackPlayer({ track, moduleLabel, speed, onSpeedChange }: TrackPlayerPr
             style={{ "--seek-progress": `${progressPct}%` } as React.CSSProperties}
             className="seek-range mt-2 w-full disabled:opacity-40"
           />
-          <div className="mt-1 flex items-center justify-between font-mono text-[11px] text-neutral-500">
+          <div className="mt-1 flex items-center justify-between text-[11px] font-bold text-ink-faint">
             <span>{fmt(currentTime)}</span>
             <span className="flex items-center gap-1.5">
               <span
-                className={`h-1.5 w-1.5 rounded-full ${
-                  engine === "audio" ? "bg-emerald-300" : "bg-violet-300"
-                } ${playing ? "animate-pulse" : ""}`}
+                className={`h-1.5 w-1.5 rounded-full ${engine === "audio" ? "bg-brand-mint" : "bg-brand-violet"} ${playing ? "animate-pulse" : ""}`}
                 aria-hidden="true"
               />
-              {engine === "audio"
-                ? "Studio narration"
-                : speechSupported
-                  ? "Browser voice · studio TTS pending"
-                  : "Voice unavailable in this browser"}
+              {engine === "audio" ? "Studio voice" : speechSupported ? "Browser voice" : "No voice in this browser"}
             </span>
             <span>{fmt(duration)}</span>
           </div>
         </div>
 
         {/* Speed */}
-        <div
-          role="group"
-          aria-label="Playback speed"
-          className="flex items-center gap-1 rounded-full border border-white/10 bg-black/30 p-1"
-        >
+        <div role="group" aria-label="Playback speed" className="flex items-center gap-1 rounded-full bg-ink/6 p-1">
           {SPEEDS.map((value) => (
             <button
               key={value}
@@ -372,10 +355,8 @@ function TrackPlayer({ track, moduleLabel, speed, onSpeedChange }: TrackPlayerPr
               onClick={() => changeSpeed(value)}
               aria-pressed={speed === value}
               aria-label={`${value} times speed`}
-              className={`h-8 min-w-12 rounded-full px-2.5 font-mono text-xs transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 ${
-                speed === value
-                  ? "bg-cyan-400 text-neutral-950 shadow-[0_0_14px_rgba(34,211,238,0.5)]"
-                  : "text-neutral-400 hover:text-white"
+              className={`h-8 min-w-12 rounded-full px-2.5 text-xs font-extrabold transition ${
+                speed === value ? "bg-white text-brand-violet-deep shadow-soft" : "text-ink-soft hover:text-ink"
               }`}
             >
               {value}x

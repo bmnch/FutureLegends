@@ -1,109 +1,106 @@
 "use client";
 
 import { useId, useState } from "react";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import type { SyllabusOutline } from "@/lib/types";
+import { Pill } from "@/components/ui/Pill";
 
 type Props = {
   syllabus: SyllabusOutline;
 };
 
-export function SyllabusOutlineView({ syllabus }: Props) {
-  const headingId = useId();
-  const [openModules, setOpenModules] = useState<Record<number, boolean>>(() =>
-    Object.fromEntries(syllabus.modules.map((_, i) => [i, i === 0])),
-  );
+const TONES = ["violet", "coral", "ocean", "mint", "sun"] as const;
 
-  function toggleModule(index: number) {
-    setOpenModules((prev) => ({ ...prev, [index]: !prev[index] }));
-  }
+export function SyllabusOutlineView({ syllabus }: Props) {
+  const reduceMotion = useReducedMotion();
+  const headingId = useId();
+  const [open, setOpen] = useState<Record<number, boolean>>({ 0: true });
+  const totalMinutes = syllabus.modules.reduce((sum, m) => sum + (m.estimatedMinutes || 0), 0);
 
   return (
     <motion.section
       aria-labelledby={headingId}
-      initial={{ opacity: 0, y: 24 }}
+      initial={reduceMotion ? false : { opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-      className="relative"
+      transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
     >
-      <div className="glass-panel mb-6 rounded-2xl p-6 sm:p-8">
-        <p className="font-mono text-xs uppercase tracking-[0.22em] text-violet-300">
-          Interactive outline
-        </p>
-        <h2
-          id={headingId}
-          className="mt-2 text-2xl font-semibold tracking-tight text-white sm:text-3xl"
-        >
+      <div className="rounded-3xl bg-brand-gradient-soft p-6">
+        <div className="flex flex-wrap items-center gap-2">
+          <Pill tone="violet">{syllabus.modules.length} modules</Pill>
+          {totalMinutes > 0 ? <Pill tone="coral">about {totalMinutes} min</Pill> : null}
+        </div>
+        <h3 id={headingId} className="mt-3 font-display text-2xl font-bold leading-tight text-ink sm:text-3xl">
           {syllabus.courseTitle}
-        </h2>
-        <p className="mt-2 text-sm text-neutral-400">
-          {syllabus.modules.length}-module localized syllabus
-        </p>
+        </h3>
       </div>
 
-      <ol className="relative space-y-4">
-        <div
-          aria-hidden="true"
-          className="absolute left-[1.15rem] top-4 bottom-4 w-px bg-gradient-to-b from-cyan-400/50 via-violet-500/40 to-transparent"
-        />
-
+      <ol className="mt-4 space-y-2.5">
         {syllabus.modules.map((module, index) => {
-          const isOpen = openModules[index];
-          const panelId = `module-panel-${index}`;
-          const buttonId = `module-button-${index}`;
-
+          const isOpen = Boolean(open[index]);
+          const panelId = `${headingId}-panel-${index}`;
+          const tone = TONES[index % TONES.length];
           return (
             <motion.li
               key={`${module.title}-${index}`}
-              initial={{ opacity: 0, y: 18 }}
+              initial={reduceMotion ? false : { opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.08 * index, duration: 0.4 }}
-              className="relative"
+              transition={{ delay: reduceMotion ? 0 : 0.06 * index, duration: 0.35 }}
+              className="overflow-hidden rounded-3xl bg-white/85 shadow-soft"
             >
-              <div className="glass-card overflow-hidden rounded-2xl">
-                <button
-                  id={buttonId}
-                  type="button"
-                  aria-expanded={isOpen}
-                  aria-controls={panelId}
-                  onClick={() => toggleModule(index)}
-                  className="flex w-full items-start justify-between gap-4 px-5 py-5 text-left transition hover:bg-white/[0.03] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-cyan-300"
+              <button
+                type="button"
+                aria-expanded={isOpen}
+                aria-controls={panelId}
+                onClick={() => setOpen((prev) => ({ ...prev, [index]: !prev[index] }))}
+                className="flex w-full items-start gap-4 px-5 py-4 text-left transition hover:bg-white"
+              >
+                <span
+                  className={`mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-2xl font-display text-lg font-bold ${
+                    tone === "violet"
+                      ? "bg-brand-violet-soft text-brand-violet-deep"
+                      : tone === "coral"
+                        ? "bg-brand-coral-soft text-brand-coral-deep"
+                        : tone === "ocean"
+                          ? "bg-brand-ocean-soft text-brand-ocean-deep"
+                          : tone === "mint"
+                            ? "bg-brand-mint-soft text-brand-mint-deep"
+                            : "bg-brand-sun-soft text-[#8a5a00]"
+                  }`}
                 >
-                  <span>
-                    <span className="font-mono text-xs text-cyan-300">
-                      Module {String(index + 1).padStart(2, "0")}
-                    </span>
-                    <span className="mt-1 block text-base font-medium text-white">
-                      {module.title}
-                    </span>
-                    <span className="mt-1 block text-sm text-neutral-400">
-                      {module.description}
-                    </span>
-                  </span>
-                  <span className="shrink-0 font-mono text-xs text-neutral-500">
-                    {module.estimatedMinutes} min · {isOpen ? "−" : "+"}
-                  </span>
-                </button>
-
-                <div
-                  id={panelId}
-                  role="region"
-                  aria-labelledby={buttonId}
-                  hidden={!isOpen}
-                  className="border-t border-white/10 px-5 py-4"
-                >
-                  <ul className="flex flex-wrap gap-2">
-                    {module.topics.map((topic) => (
-                      <li
-                        key={topic}
-                        className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-neutral-300"
-                      >
-                        {topic}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
+                  {index + 1}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-base font-extrabold text-ink">{module.title}</span>
+                  <span className="mt-0.5 block text-sm font-semibold text-ink-soft">{module.description}</span>
+                </span>
+                <span className="flex shrink-0 items-center gap-2 text-xs font-extrabold text-ink-faint">
+                  {module.estimatedMinutes} min
+                  <motion.span animate={{ rotate: isOpen ? 180 : 0 }} aria-hidden="true" className="inline-block">
+                    ▾
+                  </motion.span>
+                </span>
+              </button>
+              <AnimatePresence initial={false}>
+                {isOpen ? (
+                  <motion.div
+                    id={panelId}
+                    key="panel"
+                    initial={reduceMotion ? false : { height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={reduceMotion ? undefined : { height: 0, opacity: 0 }}
+                    transition={{ duration: 0.25 }}
+                    className="overflow-hidden"
+                  >
+                    <ul className="flex flex-wrap gap-2 px-5 pb-4">
+                      {module.topics.map((topic) => (
+                        <li key={topic} className="rounded-full bg-ink/6 px-3 py-1.5 text-xs font-bold text-ink-soft">
+                          {topic}
+                        </li>
+                      ))}
+                    </ul>
+                  </motion.div>
+                ) : null}
+              </AnimatePresence>
             </motion.li>
           );
         })}

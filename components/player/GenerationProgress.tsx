@@ -14,12 +14,12 @@ export type ProgressState = {
   complete: { title: string; moduleCount: number } | null;
 };
 
-export const STAGE_ORDER: Array<{ id: PipelineStage; label: string; agent: string }> = [
-  { id: "research", label: "Grounding facts", agent: "Research Agent" },
-  { id: "architect", label: "Designing syllabus", agent: "Architect Agent" },
-  { id: "content", label: "Writing modules in parallel", agent: "Content Agents" },
-  { id: "audio", label: "Reserving narration", agent: "TTS Agent" },
-  { id: "persist", label: "Saving to D1", agent: "Supervisor" },
+export const STAGE_ORDER: Array<{ id: PipelineStage; label: string; emoji: string; blurb: string }> = [
+  { id: "research", label: "Checking the local facts", emoji: "🔎", blurb: "Laws, transit, prices, names" },
+  { id: "architect", label: "Planning your modules", emoji: "🗺️", blurb: "The shape of the course" },
+  { id: "content", label: "Writing the lessons", emoji: "✍️", blurb: "All modules at once" },
+  { id: "audio", label: "Setting up audio", emoji: "🎧", blurb: "Narration for every section" },
+  { id: "persist", label: "Saving your course", emoji: "💾", blurb: "Almost there" },
 ];
 
 export function initialProgress(): ProgressState {
@@ -58,9 +58,7 @@ export function reduceProgress(state: ProgressState, event: GenerationEvent): Pr
       return { ...state, modules };
     }
     case "log":
-      return event.message === "…"
-        ? state
-        : { ...state, logs: [...state.logs.slice(-19), event.message] };
+      return event.message === "…" ? state : { ...state, logs: [...state.logs.slice(-19), event.message] };
     case "complete":
       return {
         ...state,
@@ -94,12 +92,12 @@ export function GenerationProgress({ state, compact = false }: Props) {
           const s = state.stages[stage.id];
           const tone =
             s.status === "done"
-              ? "border-emerald-300/40 bg-emerald-400/10"
+              ? "bg-brand-mint-soft"
               : s.status === "running"
-                ? "border-cyan-300/50 bg-cyan-400/10 shadow-[0_0_24px_rgba(34,211,238,0.18)]"
+                ? "bg-white shadow-pop ring-2 ring-brand-violet/30"
                 : s.status === "error"
-                  ? "border-rose-400/50 bg-rose-500/10"
-                  : "border-white/10 bg-white/[0.02]";
+                  ? "bg-brand-rose-soft"
+                  : "bg-white/60";
 
           return (
             <motion.li
@@ -107,38 +105,34 @@ export function GenerationProgress({ state, compact = false }: Props) {
               initial={reduceMotion ? false : { opacity: 0, x: -8 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: i * 0.05, duration: 0.3 }}
-              className={`flex items-center gap-3 rounded-2xl border px-4 py-3 ${tone}`}
+              className={`flex items-center gap-3 rounded-3xl px-4 py-3 transition ${tone}`}
             >
-              <span
-                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full font-mono text-[11px] ${
-                  s.status === "done"
-                    ? "bg-emerald-400 text-neutral-950"
-                    : s.status === "running"
-                      ? "bg-cyan-400 text-neutral-950"
-                      : s.status === "error"
-                        ? "bg-rose-500 text-white"
-                        : "bg-white/10 text-neutral-400"
-                }`}
+              <motion.span
+                className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-white text-xl shadow-soft"
+                animate={s.status === "running" && !reduceMotion ? { rotate: [0, -8, 8, 0], scale: [1, 1.08, 1] } : undefined}
+                transition={{ duration: 1.4, repeat: Infinity }}
                 aria-hidden="true"
               >
-                {s.status === "done" ? "✓" : s.status === "error" ? "!" : i + 1}
-              </span>
+                {s.status === "done" ? "✅" : s.status === "error" ? "⚠️" : stage.emoji}
+              </motion.span>
               <div className="min-w-0 flex-1">
-                <div className="flex items-baseline justify-between gap-3">
-                  <p className="truncate text-sm font-medium text-white">{stage.label}</p>
-                  <p className="shrink-0 font-mono text-[10px] uppercase tracking-wider text-neutral-500">
-                    {stage.agent}
-                  </p>
-                </div>
-                {!compact && s.detail ? (
-                  <p className="mt-0.5 truncate text-xs text-neutral-400">{s.detail}</p>
+                <p className={`truncate text-sm font-extrabold ${s.status === "pending" ? "text-ink-faint" : "text-ink"}`}>{stage.label}</p>
+                {!compact ? (
+                  <p className="mt-0.5 truncate text-xs font-semibold text-ink-soft">{s.detail || stage.blurb}</p>
                 ) : null}
-                {s.status === "running" ? (
-                  <span className="sr-only">In progress</span>
-                ) : null}
+                {s.status === "running" ? <span className="sr-only">In progress</span> : null}
               </div>
               {s.status === "running" ? (
-                <span className="h-2 w-2 shrink-0 animate-pulse rounded-full bg-cyan-300 shadow-[0_0_12px_#22d3ee]" />
+                <span className="flex items-center gap-1" aria-hidden="true">
+                  {[0, 1, 2].map((d) => (
+                    <motion.span
+                      key={d}
+                      className="h-1.5 w-1.5 rounded-full bg-brand-violet"
+                      animate={reduceMotion ? undefined : { opacity: [0.3, 1, 0.3] }}
+                      transition={{ duration: 1, repeat: Infinity, delay: d * 0.18 }}
+                    />
+                  ))}
+                </span>
               ) : null}
             </motion.li>
           );
@@ -157,15 +151,15 @@ export function GenerationProgress({ state, compact = false }: Props) {
             {state.modules.map((m, i) => (
               <span
                 key={i}
-                className={`rounded-full border px-3 py-1 text-xs ${
+                className={`rounded-full px-3 py-1.5 text-xs font-extrabold ${
                   m.status === "done"
-                    ? "border-emerald-300/40 bg-emerald-400/10 text-emerald-100"
+                    ? "bg-brand-mint-soft text-brand-mint-deep"
                     : m.status === "retrying"
-                      ? "border-amber-300/40 bg-amber-400/10 text-amber-100"
-                      : "border-cyan-300/30 bg-cyan-400/5 text-cyan-100"
+                      ? "bg-brand-sun-soft text-[#8a5a00]"
+                      : "bg-brand-violet-soft text-brand-violet-deep"
                 }`}
               >
-                {m.status === "running" ? "✎ " : m.status === "retrying" ? "↻ " : "✓ "}
+                {m.status === "running" ? "✍️ " : m.status === "retrying" ? "🔁 " : "✅ "}
                 {m.title || `Module ${i + 1}`}
               </span>
             ))}
@@ -174,7 +168,7 @@ export function GenerationProgress({ state, compact = false }: Props) {
       </AnimatePresence>
 
       {state.error ? (
-        <p role="alert" className="rounded-2xl border border-rose-400/40 bg-rose-500/10 p-3 text-sm text-rose-100">
+        <p role="alert" className="rounded-2xl bg-brand-rose-soft px-4 py-3 text-sm font-bold text-brand-rose">
           {state.error}
         </p>
       ) : null}

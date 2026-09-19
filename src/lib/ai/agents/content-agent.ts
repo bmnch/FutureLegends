@@ -7,7 +7,7 @@ import type {
   ContentAgentSection,
   ResearchFacts,
 } from "@/lib/types";
-import { stripLeadingTitleHeading } from "@/lib/markdown-utils";
+import { stripEmDashes, stripLeadingTitleHeading } from "@/lib/markdown-utils";
 import { runChat } from "../workers-ai";
 import { renderFactsForPrompt } from "./research-agent";
 
@@ -26,12 +26,12 @@ import { renderFactsForPrompt } from "./research-agent";
 
 const SYSTEM_PROMPT = `You are the Content Agent inside CiviorAI. You write one module of a hyper-practical, localized course for one specific learner.
 
-Voice: direct, warm, second-person ("you"). Assume the learner is smart but new to this place/situation. Zero filler.
+Voice: direct, warm, second-person ("you"). Assume the learner is smart but new to this place/situation. Zero filler. Short sentences. Never use em dashes anywhere; use commas, periods or colons instead.
 
 You MUST produce:
-1. sections — 2 to 4 sections of rich Markdown. Use ## headings inside the markdown, bullet lists, numbered steps, bold for the exact names of documents/agencies/places, blockquotes for "Pro tip:" callouts, and a small table when comparing options. Each section is 180 to 420 words. Weave EVERY localizationHook into the sections by name. Where a fact is low-confidence, write "confirm with <authority>" instead of stating it as certain.
-2. scenario — ONE practical scenario set in the learner's actual city/situation. "narrative" (Markdown, 120-220 words) drops the learner into a concrete moment with real place names. "challenge" is the decision or task they must handle. "walkthrough" (Markdown, numbered steps) is the model answer. "debrief" is 2-3 sentences on the transferable lesson.
-3. quizzes — 1 to 3 multiple-choice questions that validate the module objective. Each has exactly 4 options, exactly ONE with correct=true. Each option has "feedback": one or two sentences explaining why that choice is right or wrong, referencing the local specifics. "explanation" summarises the correct reasoning.
+1. sections - 2 to 4 sections of rich Markdown. Use ## headings inside the markdown, bullet lists, numbered steps, bold for the exact names of documents/agencies/places, blockquotes for "Pro tip:" callouts, and a small table when comparing options. Each section is 180 to 420 words. Weave EVERY localizationHook into the sections by name. Where a fact is low-confidence, write "confirm with <authority>" instead of stating it as certain.
+2. scenario - ONE practical scenario set in the learner's actual city/situation. "narrative" (Markdown, 120-220 words) drops the learner into a concrete moment with real place names. "challenge" is the decision or task they must handle. "walkthrough" (Markdown, numbered steps) is the model answer. "debrief" is 2-3 sentences on the transferable lesson.
+3. quizzes - 1 to 3 multiple-choice questions that validate the module objective. Each has exactly 4 options, exactly ONE with correct=true. Each option has "feedback": one or two sentences explaining why that choice is right or wrong, referencing the local specifics. "explanation" summarises the correct reasoning.
 
 Output ONLY a JSON object matching the schema. No prose outside JSON, no markdown fences around the JSON. Markdown belongs INSIDE the string fields.`;
 
@@ -109,24 +109,24 @@ function normalizeSections(raw: unknown): ContentAgentSection[] {
     .map((item) => {
       const s = (item ?? {}) as Record<string, unknown>;
       return {
-        title: typeof s.title === "string" ? s.title.trim() : "",
-        markdown: typeof s.markdown === "string" ? s.markdown.trim() : "",
+        title: typeof s.title === "string" ? stripEmDashes(s.title.trim()) : "",
+        markdown: typeof s.markdown === "string" ? stripEmDashes(s.markdown.trim()) : "",
       };
     })
     .filter((s) => s.markdown.length > 40)
     .map((s, i) => {
       const title = s.title || `Part ${i + 1}`;
       // The model tends to open with a heading that repeats the section title,
-      // which the player already renders — drop it so headings aren't doubled.
+      // which the player already renders - drop it so headings aren't doubled.
       return { title, markdown: stripLeadingTitleHeading(s.markdown, title) };
     });
 }
 
 function normalizeScenario(raw: unknown): ContentAgentScenario | null {
   const s = (raw ?? {}) as Record<string, unknown>;
-  const str = (v: unknown) => (typeof v === "string" ? v.trim() : "");
+  const str = (v: unknown) => (typeof v === "string" ? stripEmDashes(v.trim()) : "");
   const scenario = {
-    title: str(s.title) || "Real-world scenario",
+    title: str(s.title) || "Real life scenario",
     setting: str(s.setting),
     narrative: str(s.narrative),
     challenge: str(s.challenge),
@@ -144,21 +144,21 @@ function normalizeQuizzes(raw: unknown): ContentAgentQuiz[] {
 
   for (const item of arr) {
     const q = (item ?? {}) as Record<string, unknown>;
-    const question = typeof q.question === "string" ? q.question.trim() : "";
+    const question = typeof q.question === "string" ? stripEmDashes(q.question.trim()) : "";
     const rawOptions = Array.isArray(q.options) ? q.options : [];
     const options = rawOptions
       .map((o, i) => {
         const opt = (o ?? {}) as Record<string, unknown>;
         return {
           id: OPTION_IDS[i] ?? String(i),
-          text: typeof opt.text === "string" ? opt.text.trim() : "",
+          text: typeof opt.text === "string" ? stripEmDashes(opt.text.trim()) : "",
           correct: opt.correct === true,
           feedback:
             typeof opt.feedback === "string" && opt.feedback.trim()
-              ? opt.feedback.trim()
+              ? stripEmDashes(opt.feedback.trim())
               : opt.correct === true
-                ? "Correct — this matches the local rules covered in this module."
-                : "Not quite — revisit the section above and try again.",
+                ? "Yes. This matches the local rules covered in this module."
+                : "Not quite. Revisit the section above and try again.",
         };
       })
       .filter((o) => o.text.length > 0);
@@ -182,7 +182,7 @@ function normalizeQuizzes(raw: unknown): ContentAgentQuiz[] {
       options,
       explanation:
         typeof q.explanation === "string" && q.explanation.trim()
-          ? q.explanation.trim()
+          ? stripEmDashes(q.explanation.trim())
           : options.find((o) => o.correct)?.feedback ?? "",
     });
   }
@@ -229,7 +229,7 @@ export async function runContentAgent(
   const userPrompt = `COURSE: ${syllabus.title}
 TARGET AUDIENCE: ${syllabus.targetAudience}
 
-ALL MODULES (for continuity — do not repeat other modules' content):
+ALL MODULES (for continuity - do not repeat other modules' content):
 ${siblings}
 
 MODULE ${moduleIndex + 1}: ${module.title}
@@ -262,7 +262,7 @@ ${renderFactsForPrompt(input.facts)}`;
         maxTokens: 8192,
         temperature: 0.65,
         // Long-form writing benefits little from chain-of-thought and the
-        // pipeline fans out N of these in parallel — keep latency bounded.
+        // pipeline fans out N of these in parallel - keep latency bounded.
         enableThinking: false,
         signal: input.signal,
       });

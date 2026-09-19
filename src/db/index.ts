@@ -21,7 +21,7 @@ export type Database = DrizzleD1Database<typeof schema>;
  *
  * Note on transactions: D1 does not support interactive `BEGIN`/`COMMIT`
  * statements, so Drizzle's `db.transaction()` cannot be used. Use
- * `db.batch([...])` instead — D1 executes a batch as a single SQLite
+ * `db.batch([...])` instead - D1 executes a batch as a single SQLite
  * transaction and rolls the whole sequence back if any statement fails.
  */
 export async function getDb(): Promise<Database> {

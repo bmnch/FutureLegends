@@ -24,9 +24,9 @@ export const dynamic = "force-dynamic";
  * events**. Workers impose no wall-clock limit while a response is streaming.
  *
  * Body: {
- *   brainDump: string;                // required — the learner's raw context
- *   courseId?: string;                // optional — reuse the id minted at checkout
- *   outline?: SyllabusOutline;        // optional — the previewed syllabus
+ *   brainDump: string;                // required - the learner's raw context
+ *   courseId?: string;                // optional - reuse the id minted at checkout
+ *   outline?: SyllabusOutline;        // optional - the previewed syllabus
  *   voicePersona?: "professional" | "warm" | "energetic";
  * }
  *
@@ -64,7 +64,7 @@ export async function POST(request: Request) {
   const brainDump = body.brainDump?.trim();
   if (!brainDump || brainDump.length < 20) {
     return NextResponse.json(
-      { error: "brainDump must be at least 20 characters." },
+      { error: "Tell us a bit more. At least a couple of sentences." },
       { status: 400 },
     );
   }
@@ -101,7 +101,7 @@ export async function POST(request: Request) {
       }
       if (existing.status === "ready") {
         return NextResponse.json(
-          { error: "This course has already been generated.", courseId },
+          { error: "This course is already built.", courseId },
           { status: 409 },
         );
       }

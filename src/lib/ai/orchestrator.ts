@@ -121,7 +121,7 @@ async function assembleModule(params: {
     audioUrl: null,
   });
 
-  // 3) Validation quiz(zes) — gate progression
+  // 3) Validation quiz(zes) - gate progression
   for (const quiz of params.content.quizzes) {
     const quizPayload: QuizBlockPayload = {
       kind: "quiz",
@@ -147,7 +147,7 @@ async function assembleModule(params: {
   });
   const audioPayload: AudioBlockPayload = {
     kind: "audio",
-    title: `${params.title} — full narration`,
+    title: `${params.title}: listen to the whole module`,
     transcript,
     narration: narration.meta,
   };
@@ -177,7 +177,7 @@ async function assembleModule(params: {
  *
  * D1 has no interactive transactions, so Drizzle's `db.transaction()` is not
  * usable; `db.batch()` executes every statement inside one SQLite transaction
- * and rolls everything back if any statement fails — the semantics we need.
+ * and rolls everything back if any statement fails - the semantics we need.
  */
 async function persistCourse(params: {
   db: Database;

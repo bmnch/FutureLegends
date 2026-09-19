@@ -56,6 +56,42 @@ export function useStoredJson<T>(key: string): T | null | NotHydrated {
   );
 }
 
+/**
+ * Read several JSON keys at once (for example progress for every course on the
+ * dashboard). Returns `NOT_HYDRATED` on the server, then a map of key to value.
+ */
+export function useStoredJsonMap<T>(keys: readonly string[]): Record<string, T | null> | NotHydrated {
+  const cache = useRef<{ raw: string; value: Record<string, T | null> }>({ raw: "", value: {} });
+  const keyList = keys.join("\u0000");
+
+  const getSnapshot = useCallback((): Record<string, T | null> => {
+    const raws = keyList ? keyList.split("\u0000").map((k) => [k, readRaw(k)] as const) : [];
+    const signature = JSON.stringify(raws);
+    if (signature !== cache.current.raw) {
+      const value: Record<string, T | null> = {};
+      for (const [k, raw] of raws) {
+        let parsed: T | null = null;
+        if (raw) {
+          try {
+            parsed = JSON.parse(raw) as T;
+          } catch {
+            parsed = null;
+          }
+        }
+        value[k] = parsed;
+      }
+      cache.current = { raw: signature, value };
+    }
+    return cache.current.value;
+  }, [keyList]);
+
+  return useSyncExternalStore<Record<string, T | null> | NotHydrated>(
+    subscribe,
+    getSnapshot,
+    () => NOT_HYDRATED,
+  );
+}
+
 /** Feature-detect a browser API without an effect. */
 export function useBrowserFeature(test: () => boolean): boolean {
   return useSyncExternalStore(

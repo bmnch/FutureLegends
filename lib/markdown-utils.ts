@@ -18,6 +18,18 @@ function normalizeHeadingText(s: string): string {
  * already renders the section title as a heading, so drop a leading heading
  * that duplicates it (ignoring numbering, emphasis and punctuation).
  */
+/**
+ * House style: no em dashes anywhere. Model output occasionally still has
+ * them, so this swaps each one for a comma (or drops it at a line start).
+ */
+export function stripEmDashes(text: string): string {
+  if (!text || !text.includes("\u2014")) return text;
+  return text
+    .replace(/^\s*\u2014\s*/gm, "")
+    .replace(/\s*\u2014\s*/g, ", ")
+    .replace(/,\s*([,.;:!?])/g, "$1");
+}
+
 export function stripLeadingTitleHeading(markdown: string, title: string): string {
   const trimmed = markdown.trimStart();
   const match = /^(#{1,6})\s+(.+?)\s*#*\s*(?:\r?\n|$)/.exec(trimmed);

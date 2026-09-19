@@ -32,7 +32,7 @@ export function savePendingCourse(pending: PendingCourse) {
     sessionStorage.setItem(PENDING_KEY_PREFIX + pending.courseId, JSON.stringify(pending));
     localStorage.setItem(PENDING_KEY_PREFIX + pending.courseId, JSON.stringify(pending));
   } catch {
-    // storage unavailable — the setup page will ask for the brain dump again
+    // storage unavailable - the setup page will ask for the brain dump again
   }
 }
 

@@ -5,27 +5,27 @@
  * below is a key of the `AiModels` interface) and the Workers AI catalog at
  * https://developers.cloudflare.com/workers-ai/models/ (Sep 2026).
  *
- * Rationale — highest capability first, with a graceful fallback chain so the
+ * Rationale - highest capability first, with a graceful fallback chain so the
  * product still works on accounts that have not enabled paid-tier models:
  *
- *  1. `@cf/moonshotai/kimi-k2.6` — frontier-scale 1T-parameter MoE, 262,144
+ *  1. `@cf/moonshotai/kimi-k2.6` - frontier-scale 1T-parameter MoE, 262,144
  *     token context, native structured outputs, reasoning, function calling.
  *     The most capable text model on Workers AI; used for every agent.
- *  2. `@cf/deepseek-ai/deepseek-v4-pro-0813` — high-capability reasoning model
+ *  2. `@cf/deepseek-ai/deepseek-v4-pro-0813` - high-capability reasoning model
  *     with a 1,048,576 token context window. Fallback when Kimi is unavailable,
  *     and the preferred model when the grounding context is very large.
- *  3. `@cf/openai/gpt-oss-120b` — 120B open-weight reasoning model.
- *  4. `@cf/meta/llama-3.3-70b-instruct-fp8-fast` — 70B, officially listed under
+ *  3. `@cf/openai/gpt-oss-120b` - 120B open-weight reasoning model.
+ *  4. `@cf/meta/llama-3.3-70b-instruct-fp8-fast` - 70B, officially listed under
  *     Workers AI JSON Mode support and available on the free tier. Last-resort
  *     fallback so generation never hard-fails on plan restrictions.
  *
  * Embeddings:
- *  1. `@cf/qwen/qwen3-embedding-0.6b` — largest (600M-parameter) embedding
+ *  1. `@cf/qwen/qwen3-embedding-0.6b` - largest (600M-parameter) embedding
  *     model in the catalog, instruction-aware, multilingual.
- *  2. `@cf/baai/bge-m3` — 568M-parameter multilingual fallback (8,192 tokens).
+ *  2. `@cf/baai/bge-m3` - 568M-parameter multilingual fallback (8,192 tokens).
  *
  * Text-to-speech (wired as a documented stub, see `agents/tts-agent.ts`):
- *  - `@cf/deepgram/aura-2-en` — Cloudflare's Deepgram Aura-2 partner model.
+ *  - `@cf/deepgram/aura-2-en` - Cloudflare's Deepgram Aura-2 partner model.
  */
 
 export const TEXT_MODELS = {

@@ -27,7 +27,7 @@ export async function GET(
   const course = await getPlayerCourse(db, courseId, user.id);
 
   if (!course) {
-    return NextResponse.json({ error: "Course not found." }, { status: 404 });
+    return NextResponse.json({ error: "We could not find that course." }, { status: 404 });
   }
 
   return NextResponse.json(

@@ -1,36 +1,84 @@
 @import "tailwindcss";
 
+/* ---------------------------------------------------------------------------
+   CiviorAI design system
+   Warm, light, playful. Tailwind v4 reads these tokens via @theme, so classes
+   like bg-cream, text-ink, bg-brand-violet and shadow-pop are all available.
+--------------------------------------------------------------------------- */
+
 :root {
-  --background: #0a0a0a;
-  --foreground: #fafafa;
-  --muted: #a3a3a3;
-  --surface: #0a0a0a;
-  --surface-elevated: #111111;
-  --border: rgba(255, 255, 255, 0.1);
-  --neon: #22d3ee;
-  --neon-dim: rgba(34, 211, 238, 0.25);
-  --neon-purple: #7c3aed;
-  --neon-purple-glow: rgba(124, 58, 237, 0.35);
-  --neon-hot: #a78bfa;
-  --danger: #fb7185;
-  --focus-ring: #22d3ee;
+  --cream: #fff8f0;
+  --cream-deep: #fdebd9;
+  --paper: #ffffff;
+  --ink: #2b2342;
+  --ink-soft: #625a7c;
+  --ink-faint: #9a92b3;
+  --line: rgba(43, 35, 66, 0.08);
+  --line-strong: rgba(43, 35, 66, 0.14);
+
+  --violet: #7b6cf6;
+  --violet-deep: #5b4be0;
+  --violet-soft: #ebe8ff;
+  --coral: #ff7a5c;
+  --coral-deep: #f2543a;
+  --coral-soft: #ffe4dc;
+  --ocean: #2ea8e6;
+  --ocean-deep: #1687c4;
+  --ocean-soft: #dcf1fc;
+  --mint: #2fc490;
+  --mint-deep: #1fa276;
+  --mint-soft: #dbf6ec;
+  --sun: #ffc456;
+  --sun-deep: #f0a81c;
+  --sun-soft: #fff1cc;
+  --rose: #ef5b83;
+  --rose-soft: #ffe1ea;
+
+  --focus-ring: var(--violet);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-muted: var(--muted);
-  --color-surface: var(--surface);
-  --color-surface-elevated: var(--surface-elevated);
-  --color-border: var(--border);
-  --color-neon: var(--neon);
-  --color-neon-dim: var(--neon-dim);
-  --color-neon-purple: var(--neon-purple);
-  --color-neon-purple-glow: var(--neon-purple-glow);
-  --color-neon-hot: var(--neon-hot);
-  --color-danger: var(--danger);
-  --font-sans: var(--font-display);
-  --font-mono: var(--font-mono);
+  --color-cream: var(--cream);
+  --color-cream-deep: var(--cream-deep);
+  --color-paper: var(--paper);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-faint: var(--ink-faint);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+
+  --color-brand-violet: var(--violet);
+  --color-brand-violet-deep: var(--violet-deep);
+  --color-brand-violet-soft: var(--violet-soft);
+  --color-brand-coral: var(--coral);
+  --color-brand-coral-deep: var(--coral-deep);
+  --color-brand-coral-soft: var(--coral-soft);
+  --color-brand-ocean: var(--ocean);
+  --color-brand-ocean-deep: var(--ocean-deep);
+  --color-brand-ocean-soft: var(--ocean-soft);
+  --color-brand-mint: var(--mint);
+  --color-brand-mint-deep: var(--mint-deep);
+  --color-brand-mint-soft: var(--mint-soft);
+  --color-brand-sun: var(--sun);
+  --color-brand-sun-deep: var(--sun-deep);
+  --color-brand-sun-soft: var(--sun-soft);
+  --color-brand-rose: var(--rose);
+  --color-brand-rose-soft: var(--rose-soft);
+
+  --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-display), var(--font-body), ui-sans-serif, sans-serif;
+  --font-mono: var(--font-mono), ui-monospace, monospace;
+
+  --radius-4xl: 2rem;
+  --radius-5xl: 2.5rem;
+
+  --shadow-soft: 0 10px 30px -12px rgba(43, 35, 66, 0.18);
+  --shadow-pop: 0 18px 50px -16px rgba(123, 108, 246, 0.45);
+  --shadow-coral: 0 18px 50px -16px rgba(255, 122, 92, 0.5);
+  --shadow-lift: 0 24px 60px -20px rgba(43, 35, 66, 0.28);
+
+  --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 * {
@@ -38,58 +86,111 @@
 }
 
 html {
-  color-scheme: dark;
+  color-scheme: light;
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
 }
 
 body {
-  background: #0a0a0a;
-  color: var(--foreground);
-  font-family: var(--font-display), ui-sans-serif, sans-serif;
-  min-height: 100%;
+  min-height: 100dvh;
+  color: var(--ink);
+  font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  background-color: var(--cream);
+  background-image:
+    radial-gradient(60rem 40rem at 8% -10%, rgba(123, 108, 246, 0.16), transparent 60%),
+    radial-gradient(50rem 36rem at 100% 10%, rgba(255, 122, 92, 0.16), transparent 60%),
+    radial-gradient(48rem 40rem at 50% 110%, rgba(46, 168, 230, 0.14), transparent 60%);
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+.font-display {
+  font-family: var(--font-display), var(--font-body), ui-sans-serif, sans-serif;
+  letter-spacing: -0.02em;
 }
 
 ::selection {
-  background: color-mix(in srgb, var(--neon) 40%, transparent);
-  color: #000;
+  background: color-mix(in srgb, var(--sun) 55%, white);
+  color: var(--ink);
 }
 
 :focus-visible {
-  outline: 2px solid var(--focus-ring);
+  outline: 3px solid color-mix(in srgb, var(--focus-ring) 70%, transparent);
   outline-offset: 3px;
+  border-radius: 0.5rem;
 }
 
-@keyframes pulse-cyan {
+/* ---------------------------------------------------------------------------
+   Glass surfaces
+--------------------------------------------------------------------------- */
+
+.glass {
+  background: rgba(255, 255, 255, 0.62);
+  backdrop-filter: blur(18px) saturate(1.3);
+  -webkit-backdrop-filter: blur(18px) saturate(1.3);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.9) inset,
+    var(--shadow-soft);
+}
+
+.glass-strong {
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 1) inset,
+    var(--shadow-lift);
+}
+
+.glass-tint {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.8),
+    rgba(235, 232, 255, 0.55) 60%,
+    rgba(255, 228, 220, 0.55)
+  );
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: var(--shadow-soft);
+}
+
+/* ---------------------------------------------------------------------------
+   Motion helpers
+--------------------------------------------------------------------------- */
+
+@keyframes float-y {
   0%,
   100% {
-    box-shadow:
-      0 0 0 0 rgba(34, 211, 238, 0.35),
-      0 0 24px rgba(34, 211, 238, 0.2);
+    transform: translateY(0);
   }
   50% {
-    box-shadow:
-      0 0 0 8px rgba(34, 211, 238, 0),
-      0 0 36px rgba(34, 211, 238, 0.45);
+    transform: translateY(-10px);
   }
 }
 
-@keyframes scan-glow {
-  0% {
-    transform: translateY(-100%);
-    opacity: 0;
-  }
-  20% {
-    opacity: 1;
-  }
-  80% {
-    opacity: 1;
-  }
+@keyframes wiggle {
+  0%,
   100% {
-    transform: translateY(220%);
-    opacity: 0;
+    transform: rotate(-3deg);
+  }
+  50% {
+    transform: rotate(3deg);
   }
 }
 
-@keyframes shimmer {
+@keyframes shimmer-light {
   0% {
     background-position: 200% 0;
   }
@@ -98,112 +199,232 @@ body {
   }
 }
 
-.glass-panel {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 0 40px rgba(0, 255, 255, 0.1);
+@keyframes gradient-drift {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
 }
 
-.glass-card {
-  background: rgba(255, 255, 255, 0.04);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.35),
-    0 0 24px rgba(124, 58, 237, 0.08);
+@keyframes pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 rgba(123, 108, 246, 0.45);
+  }
+  70% {
+    box-shadow: 0 0 0 14px rgba(123, 108, 246, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(123, 108, 246, 0);
+  }
 }
 
-.skeleton-scan {
+@keyframes blob-a {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(40px, -30px) scale(1.08);
+  }
+  66% {
+    transform: translate(-25px, 25px) scale(0.96);
+  }
+}
+
+@keyframes blob-b {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(-35px, 30px) scale(0.94);
+  }
+  66% {
+    transform: translate(30px, -20px) scale(1.06);
+  }
+}
+
+.animate-float {
+  animation: float-y 6s ease-in-out infinite;
+}
+
+.animate-wiggle:hover {
+  animation: wiggle 0.5s ease-in-out;
+}
+
+.animate-pulse-ring {
+  animation: pulse-ring 2.2s ease-out infinite;
+}
+
+.gradient-shift {
+  background-size: 200% 200%;
+  animation: gradient-drift 8s ease-in-out infinite;
+}
+
+.blob {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(60px);
+  opacity: 0.75;
+  pointer-events: none;
+}
+
+.blob-a {
+  animation: blob-a 22s ease-in-out infinite;
+}
+
+.blob-b {
+  animation: blob-b 26s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-float,
+  .animate-pulse-ring,
+  .gradient-shift,
+  .blob-a,
+  .blob-b,
+  .animate-wiggle:hover {
+    animation: none;
+  }
+}
+
+.skeleton {
   position: relative;
   overflow: hidden;
   background: linear-gradient(
     90deg,
-    rgba(255, 255, 255, 0.03) 0%,
-    rgba(34, 211, 238, 0.08) 45%,
-    rgba(124, 58, 237, 0.1) 55%,
-    rgba(255, 255, 255, 0.03) 100%
+    rgba(123, 108, 246, 0.1) 0%,
+    rgba(255, 122, 92, 0.16) 45%,
+    rgba(46, 168, 230, 0.14) 55%,
+    rgba(123, 108, 246, 0.1) 100%
   );
   background-size: 200% 100%;
-  animation: shimmer 1.6s ease-in-out infinite;
+  animation: shimmer-light 1.6s ease-in-out infinite;
 }
 
-.skeleton-scan::after {
-  content: "";
-  position: absolute;
-  inset-inline: 0;
-  height: 40%;
-  background: linear-gradient(
-    to bottom,
-    transparent,
-    rgba(34, 211, 238, 0.35),
-    transparent
-  );
-  animation: scan-glow 2.2s ease-in-out infinite;
-}
-
-.btn-pulse-cyan {
-  animation: pulse-cyan 2s ease-in-out infinite;
-}
-
-.gradient-text {
-  background: linear-gradient(120deg, #a3a3a3 0%, #e5e5e5 40%, #22d3ee 70%, #a78bfa 100%);
+.text-gradient {
+  background: linear-gradient(110deg, var(--violet) 0%, var(--coral) 55%, var(--ocean) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 
+.bg-brand-gradient {
+  background-image: linear-gradient(115deg, var(--violet) 0%, var(--coral) 100%);
+}
+
+.bg-brand-gradient-soft {
+  background-image: linear-gradient(115deg, var(--violet-soft) 0%, var(--coral-soft) 60%, var(--ocean-soft) 100%);
+}
+
 /* ---------------------------------------------------------------------------
-   Course player — premium long-form typography for generated markdown
+   Scrollbars + range inputs
+--------------------------------------------------------------------------- */
+
+.scroll-slim {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(43, 35, 66, 0.18) transparent;
+}
+
+.scroll-slim::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.scroll-slim::-webkit-scrollbar-thumb {
+  background: rgba(43, 35, 66, 0.16);
+  border-radius: 999px;
+}
+
+.scroll-slim::-webkit-scrollbar-thumb:hover {
+  background: rgba(43, 35, 66, 0.28);
+}
+
+.seek-range {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 8px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    var(--violet) 0%,
+    var(--coral) var(--seek-progress, 0%),
+    rgba(43, 35, 66, 0.1) var(--seek-progress, 0%),
+    rgba(43, 35, 66, 0.1) 100%
+  );
+  outline: none;
+}
+
+.seek-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: white;
+  border: 3px solid var(--violet);
+  box-shadow: 0 4px 12px rgba(123, 108, 246, 0.4);
+  cursor: pointer;
+}
+
+.seek-range::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: white;
+  border: 3px solid var(--violet);
+  box-shadow: 0 4px 12px rgba(123, 108, 246, 0.4);
+  cursor: pointer;
+}
+
+/* ---------------------------------------------------------------------------
+   Course prose: big, legible, friendly
 --------------------------------------------------------------------------- */
 
 .course-prose {
-  color: #d4d4d8;
-  font-size: 1.0625rem;
-  line-height: 1.8;
-  letter-spacing: 0.005em;
-  max-width: 68ch;
+  color: var(--ink);
+  font-size: 1.125rem;
+  line-height: 1.75;
+  max-width: 70ch;
 }
 
 .course-prose > * + * {
-  margin-top: 1.1em;
+  margin-top: 1.05em;
 }
 
 .course-prose h1,
 .course-prose h2,
 .course-prose h3,
 .course-prose h4 {
-  color: #fafafa;
-  font-weight: 600;
-  letter-spacing: -0.015em;
-  line-height: 1.25;
+  font-family: var(--font-display), var(--font-body), sans-serif;
+  color: var(--ink);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
   scroll-margin-top: 6rem;
 }
 
 .course-prose h1 {
-  font-size: 1.9rem;
+  font-size: 2rem;
   margin-top: 0;
 }
 
 .course-prose h2 {
-  font-size: 1.45rem;
-  margin-top: 2.2em;
-  padding-top: 0.6em;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 1.5rem;
+  margin-top: 1.8em;
 }
 
-.course-prose h2:first-child {
+.course-prose h2:first-child,
+.course-prose h3:first-child {
   margin-top: 0;
-  padding-top: 0;
-  border-top: 0;
 }
 
 .course-prose h3 {
-  font-size: 1.15rem;
-  margin-top: 1.8em;
-  color: #e4e4e7;
+  font-size: 1.2rem;
+  margin-top: 1.5em;
 }
 
 .course-prose p {
@@ -211,29 +432,27 @@ body {
 }
 
 .course-prose strong {
-  color: #f4f4f5;
-  font-weight: 600;
-}
-
-.course-prose em {
-  color: #e4e4e7;
+  color: var(--violet-deep);
+  font-weight: 800;
 }
 
 .course-prose a {
-  color: var(--neon);
+  color: var(--ocean-deep);
+  font-weight: 700;
   text-decoration: underline;
-  text-decoration-color: rgba(34, 211, 238, 0.4);
+  text-decoration-color: rgba(46, 168, 230, 0.4);
+  text-decoration-thickness: 2px;
   text-underline-offset: 3px;
   transition: text-decoration-color 150ms ease;
 }
 
 .course-prose a:hover {
-  text-decoration-color: var(--neon);
+  text-decoration-color: var(--ocean);
 }
 
 .course-prose ul,
 .course-prose ol {
-  padding-left: 1.4em;
+  padding-left: 1.5em;
 }
 
 .course-prose ul {
@@ -242,33 +461,49 @@ body {
 
 .course-prose ul > li {
   position: relative;
-  padding-left: 0.4em;
+  padding-left: 0.35em;
 }
 
 .course-prose ul > li::before {
   content: "";
   position: absolute;
-  left: -1.1em;
-  top: 0.78em;
-  width: 0.42em;
-  height: 0.42em;
+  left: -1.15em;
+  top: 0.72em;
+  width: 0.5em;
+  height: 0.5em;
   border-radius: 999px;
-  background: linear-gradient(135deg, #22d3ee, #a78bfa);
-  box-shadow: 0 0 10px rgba(34, 211, 238, 0.55);
+  background: linear-gradient(135deg, var(--violet), var(--coral));
 }
 
 .course-prose ol {
-  list-style: decimal;
+  list-style: none;
+  counter-reset: steps;
 }
 
-.course-prose ol > li::marker {
-  color: var(--neon);
-  font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 0.9em;
+.course-prose ol > li {
+  position: relative;
+  counter-increment: steps;
+  padding-left: 0.5em;
+}
+
+.course-prose ol > li::before {
+  content: counter(steps);
+  position: absolute;
+  left: -1.7em;
+  top: 0.18em;
+  width: 1.4em;
+  height: 1.4em;
+  border-radius: 999px;
+  background: var(--violet-soft);
+  color: var(--violet-deep);
+  font-size: 0.8em;
+  font-weight: 800;
+  display: grid;
+  place-items: center;
 }
 
 .course-prose li + li {
-  margin-top: 0.45em;
+  margin-top: 0.5em;
 }
 
 .course-prose li > p {
@@ -279,12 +514,10 @@ body {
   position: relative;
   margin: 1.4em 0;
   padding: 1rem 1.25rem 1rem 1.5rem;
-  border-radius: 1rem;
-  border: 1px solid rgba(34, 211, 238, 0.2);
-  background:
-    linear-gradient(135deg, rgba(34, 211, 238, 0.08), rgba(124, 58, 237, 0.08)),
-    rgba(255, 255, 255, 0.02);
-  color: #e4e4e7;
+  border-radius: 1.25rem;
+  background: linear-gradient(135deg, var(--sun-soft), rgba(255, 241, 204, 0.4));
+  border: 1px solid rgba(240, 168, 28, 0.25);
+  color: var(--ink);
   font-style: normal;
 }
 
@@ -293,10 +526,9 @@ body {
   position: absolute;
   inset-block: 0.85rem;
   left: 0;
-  width: 3px;
+  width: 4px;
   border-radius: 999px;
-  background: linear-gradient(180deg, #22d3ee, #a78bfa);
-  box-shadow: 0 0 14px rgba(34, 211, 238, 0.5);
+  background: var(--sun-deep);
 }
 
 .course-prose blockquote p {
@@ -305,33 +537,33 @@ body {
 
 .course-prose code {
   font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 0.86em;
-  color: #c4b5fd;
-  background: rgba(124, 58, 237, 0.14);
-  border: 1px solid rgba(124, 58, 237, 0.25);
+  font-size: 0.85em;
+  color: var(--violet-deep);
+  background: var(--violet-soft);
   border-radius: 0.4rem;
-  padding: 0.12em 0.4em;
+  padding: 0.12em 0.45em;
 }
 
 .course-prose pre {
   overflow-x: auto;
   padding: 1rem 1.15rem;
-  border-radius: 1rem;
-  background: rgba(0, 0, 0, 0.45);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1.25rem;
+  background: var(--ink);
+  color: #f4f1ff;
+  border: 0;
 }
 
 .course-prose pre code {
   background: transparent;
-  border: 0;
+  color: inherit;
   padding: 0;
-  color: #e4e4e7;
 }
 
 .course-prose hr {
   border: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.18), transparent);
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, var(--line-strong), transparent);
   margin: 2em 0;
 }
 
@@ -340,108 +572,50 @@ body {
   border-collapse: separate;
   border-spacing: 0;
   font-size: 0.95em;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 0.9rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 1rem;
   overflow: hidden;
+  background: white;
 }
 
 .course-prose thead th {
   text-align: left;
-  font-weight: 600;
-  color: #fafafa;
-  background: rgba(255, 255, 255, 0.05);
-  padding: 0.7rem 0.9rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  font-weight: 800;
+  color: var(--ink);
+  background: var(--violet-soft);
+  padding: 0.75rem 0.9rem;
 }
 
 .course-prose tbody td {
-  padding: 0.65rem 0.9rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 0.7rem 0.9rem;
+  border-top: 1px solid var(--line);
   vertical-align: top;
 }
 
-.course-prose tbody tr:last-child td {
-  border-bottom: 0;
-}
-
 .course-prose tbody tr:nth-child(even) td {
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(235, 232, 255, 0.3);
 }
 
 .course-prose input[type="checkbox"] {
-  accent-color: var(--neon);
+  accent-color: var(--violet);
   margin-right: 0.5em;
 }
 
-/* Timeline glow pulse for the active module */
-@keyframes timeline-glow {
-  0%,
-  100% {
-    box-shadow:
-      0 0 0 4px rgba(34, 211, 238, 0.12),
-      0 0 18px rgba(34, 211, 238, 0.55);
-  }
-  50% {
-    box-shadow:
-      0 0 0 7px rgba(34, 211, 238, 0.06),
-      0 0 28px rgba(34, 211, 238, 0.85);
-  }
+.course-prose.prose-compact {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  max-width: none;
 }
 
-.timeline-node-active {
-  animation: timeline-glow 2.4s ease-in-out infinite;
+.course-prose.prose-compact > * + * {
+  margin-top: 0.7em;
 }
 
-/* Thin scrollbars for the player panes */
-.scroll-slim {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+.course-prose.prose-compact h2 {
+  font-size: 1.1rem;
+  margin-top: 1em;
 }
 
-.scroll-slim::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-.scroll-slim::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.18);
-  border-radius: 999px;
-}
-
-/* Range input styling for the media bar seek control */
-.seek-range {
-  -webkit-appearance: none;
-  appearance: none;
-  height: 6px;
-  border-radius: 999px;
-  background: linear-gradient(
-    90deg,
-    #22d3ee 0%,
-    #a78bfa var(--seek-progress, 0%),
-    rgba(255, 255, 255, 0.12) var(--seek-progress, 0%),
-    rgba(255, 255, 255, 0.12) 100%
-  );
-  outline: none;
-}
-
-.seek-range::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 16px;
-  height: 16px;
-  border-radius: 999px;
-  background: #fafafa;
-  border: 2px solid #22d3ee;
-  box-shadow: 0 0 12px rgba(34, 211, 238, 0.7);
-  cursor: pointer;
-}
-
-.seek-range::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
-  border-radius: 999px;
-  background: #fafafa;
-  border: 2px solid #22d3ee;
-  box-shadow: 0 0 12px rgba(34, 211, 238, 0.7);
-  cursor: pointer;
+.course-prose.prose-compact h3 {
+  font-size: 1rem;
 }

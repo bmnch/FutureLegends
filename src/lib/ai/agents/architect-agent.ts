@@ -11,7 +11,7 @@ import { renderFactsForPrompt } from "./research-agent";
  * ---------------
  * Consumes the Research Agent's factual constraints plus the learner's brain
  * dump and designs a deeply structured syllabus: ordered modules, each with a
- * measurable objective, concrete sub-topics, and "localization hooks" — the
+ * measurable objective, concrete sub-topics, and "localization hooks" - the
  * specific local facts the Content Agent must weave into that module.
  *
  * Runs on the frontier model with reasoning enabled: curriculum design is
@@ -115,10 +115,10 @@ export async function runArchitectAgent(
   input: ArchitectAgentInput,
 ): Promise<{ syllabus: ArchitectSyllabus; model: string }> {
   const outlineSection = input.outline
-    ? `\n\nPREVIEWED OUTLINE (the learner paid for this — honour its themes):\nTitle: ${input.outline.courseTitle}\n${input.outline.modules
+    ? `\n\nPREVIEWED OUTLINE (the learner paid for this - honour its themes):\nTitle: ${input.outline.courseTitle}\n${input.outline.modules
         .map(
           (m, i) =>
-            `${i + 1}. ${m.title} — ${m.description} — topics: ${m.topics.join("; ")}`,
+            `${i + 1}. ${m.title} - ${m.description} - topics: ${m.topics.join("; ")}`,
         )
         .join("\n")}`
     : "";

@@ -1,4 +1,4 @@
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, desc, eq } from "drizzle-orm";
 import type {
   ContentBlockPayload,
   PlayerCourse,
@@ -55,6 +55,41 @@ export async function getPlayerCourse(
       })),
     })),
   };
+}
+
+export type CourseListItem = {
+  id: string;
+  title: string;
+  targetAudience: string;
+  status: "generating" | "ready" | "failed";
+  generatedAt: string;
+  moduleCount: number;
+  moduleTitles: string[];
+};
+
+/** Every course the learner owns, newest first, with a light module summary. */
+export async function listCoursesForUser(db: Database, userId: string): Promise<CourseListItem[]> {
+  const rows = await db.query.courses.findMany({
+    where: eq(courses.userId, userId),
+    orderBy: [desc(courses.generatedAt)],
+    columns: { id: true, title: true, targetAudience: true, status: true, generatedAt: true },
+    with: {
+      modules: {
+        orderBy: [asc(modules.sequenceOrder)],
+        columns: { id: true, title: true },
+      },
+    },
+  });
+
+  return rows.map((row) => ({
+    id: row.id,
+    title: row.title,
+    targetAudience: row.targetAudience,
+    status: row.status,
+    generatedAt: row.generatedAt.toISOString(),
+    moduleCount: row.modules.length,
+    moduleTitles: row.modules.map((m) => m.title),
+  }));
 }
 
 /** Lightweight ownership + status check (no hierarchy). */
