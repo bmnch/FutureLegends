@@ -11,13 +11,18 @@ import {
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import type { SyllabusOutline } from "@/lib/types";
 import { AnimatedOrbs } from "@/components/AnimatedOrbs";
+import { AuthModal } from "@/components/AuthModal";
 import { SyllabusOutlineView } from "@/components/SyllabusOutlineView";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
 
 const PLACEHOLDER =
   "e.g., I am an engineering student at TMU starting a hospitality job downtown. I need to know how to navigate transit, set up my bank for payroll, and understand my workplace rights.";
 
-export function BrainDumpHero() {
+type Props = {
+  initialAuthRequired?: boolean;
+};
+
+export function BrainDumpHero({ initialAuthRequired = false }: Props) {
   const textareaId = useId();
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const reduceMotion = useReducedMotion();
@@ -26,6 +31,9 @@ export function BrainDumpHero() {
   const [error, setError] = useState<string | null>(null);
   const [syllabus, setSyllabus] = useState<SyllabusOutline | null>(null);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [authOpen, setAuthOpen] = useState(initialAuthRequired);
+  const [authenticated, setAuthenticated] = useState(false);
+  const pendingCheckoutRef = useRef(false);
 
   const hasTyped = text.trim().length > 0;
 
@@ -39,6 +47,25 @@ export function BrainDumpHero() {
   useEffect(() => {
     autoResize();
   }, [text, autoResize]);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function loadSession() {
+      try {
+        const response = await fetch("/api/auth/session");
+        const data = (await response.json()) as { authenticated?: boolean };
+        if (!cancelled) {
+          setAuthenticated(Boolean(data.authenticated));
+        }
+      } catch {
+        if (!cancelled) setAuthenticated(false);
+      }
+    }
+    void loadSession();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -76,8 +103,15 @@ export function BrainDumpHero() {
     }
   }
 
-  async function startCheckout() {
+  async function startCheckout(options?: { skipAuthGate?: boolean }) {
     if (!syllabus) return;
+
+    if (!authenticated && !options?.skipAuthGate) {
+      pendingCheckoutRef.current = true;
+      setAuthOpen(true);
+      return;
+    }
+
     setCheckoutLoading(true);
     setError(null);
 
@@ -93,6 +127,14 @@ export function BrainDumpHero() {
         error?: string;
       };
 
+      if (response.status === 401) {
+        pendingCheckoutRef.current = true;
+        setAuthenticated(false);
+        setAuthOpen(true);
+        setCheckoutLoading(false);
+        return;
+      }
+
       if (!response.ok || !data.url) {
         throw new Error(data.error ?? "Unable to start checkout.");
       }
@@ -104,11 +146,27 @@ export function BrainDumpHero() {
     }
   }
 
+  function handleAuthenticated() {
+    setAuthenticated(true);
+    if (pendingCheckoutRef.current) {
+      pendingCheckoutRef.current = false;
+      void startCheckout({ skipAuthGate: true });
+    }
+  }
+
   return (
     <section
       aria-labelledby="brain-dump-heading"
       className="relative isolate min-h-[100svh] w-full overflow-hidden bg-neutral-950"
     >
+      <AuthModal
+        open={authOpen}
+        onClose={() => {
+          setAuthOpen(false);
+          pendingCheckoutRef.current = false;
+        }}
+        onAuthenticated={handleAuthenticated}
+      />
       <AnimatedOrbs />
 
       <div className="relative z-10 mx-auto flex min-h-[100svh] w-full max-w-3xl flex-col items-center justify-center px-6 py-20 text-center sm:px-8">
@@ -238,7 +296,7 @@ export function BrainDumpHero() {
               <div className="flex flex-col items-center gap-3 pt-2">
                 <button
                   type="button"
-                  onClick={startCheckout}
+                  onClick={() => void startCheckout()}
                   disabled={checkoutLoading}
                   aria-label="Unlock and narrate full course for four dollars and ninety-nine cents"
                   className="btn-pulse-cyan inline-flex h-14 w-full max-w-md items-center justify-center rounded-2xl bg-gradient-to-r from-cyan-400 via-cyan-300 to-violet-400 px-6 text-sm font-bold tracking-wide text-neutral-950 transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 disabled:cursor-not-allowed disabled:opacity-60"

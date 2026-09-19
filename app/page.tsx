@@ -1,10 +1,17 @@
 import { BrainDumpHero } from "@/components/BrainDumpHero";
 import { HowItWorks } from "@/components/HowItWorks";
 
-export default function HomePage() {
+type PageProps = {
+  searchParams: Promise<{ auth?: string }>;
+};
+
+export default async function HomePage({ searchParams }: PageProps) {
+  const params = await searchParams;
+  const initialAuthRequired = params.auth === "required";
+
   return (
     <main className="bg-neutral-950">
-      <BrainDumpHero />
+      <BrainDumpHero initialAuthRequired={initialAuthRequired} />
       <div className="relative overflow-hidden bg-neutral-950">
         <div
           aria-hidden="true"

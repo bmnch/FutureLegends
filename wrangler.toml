@@ -11,6 +11,12 @@ binding = "ASSETS"
 [ai]
 binding = "AI"
 
+[[d1_databases]]
+binding = "DB"
+database_name = "civior-db"
+database_id = "ee102c7c-5afe-4c20-a02d-e278eedb38c6"
+migrations_dir = "drizzle"
+
 [observability]
 enabled = true
 
