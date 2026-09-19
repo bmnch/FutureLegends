@@ -1,5 +1,6 @@
 import { eq } from "drizzle-orm";
 import { cookies } from "next/headers";
+import { NextResponse } from "next/server";
 import { getDb } from "@/src/db";
 import { users } from "@/src/db/schema";
 import {
@@ -24,19 +25,18 @@ function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-function json(data: unknown, init?: ResponseInit) {
-  return Response.json(data, init);
-}
-
 async function register(body: AuthBody) {
   const email = body.email?.trim().toLowerCase();
   const password = body.password ?? "";
 
   if (!email || !isValidEmail(email)) {
-    return json({ error: "A valid email is required." }, { status: 400 });
+    return NextResponse.json(
+      { error: "A valid email is required." },
+      { status: 400 },
+    );
   }
   if (password.length < 8) {
-    return json(
+    return NextResponse.json(
       { error: "Password must be at least 8 characters." },
       { status: 400 },
     );
@@ -50,7 +50,10 @@ async function register(body: AuthBody) {
     .limit(1);
 
   if (existing[0]) {
-    return json({ error: "An account with this email already exists." }, { status: 409 });
+    return NextResponse.json(
+      { error: "An account with this email already exists." },
+      { status: 409 },
+    );
   }
 
   const salt = generateSalt();
@@ -67,7 +70,7 @@ async function register(body: AuthBody) {
 
   const token = await signToken({ sub: id, email });
 
-  return json(
+  return NextResponse.json(
     { ok: true, user: { id, email } },
     {
       status: 201,
@@ -81,7 +84,10 @@ async function login(body: AuthBody) {
   const password = body.password ?? "";
 
   if (!email || !password) {
-    return json({ error: "Email and password are required." }, { status: 400 });
+    return NextResponse.json(
+      { error: "Email and password are required." },
+      { status: 400 },
+    );
   }
 
   const db = await getDb();
@@ -93,17 +99,23 @@ async function login(body: AuthBody) {
 
   const user = rows[0];
   if (!user) {
-    return json({ error: "Invalid email or password." }, { status: 401 });
+    return NextResponse.json(
+      { error: "Invalid email or password." },
+      { status: 401 },
+    );
   }
 
   const valid = await verifyPassword(password, user.passwordHash, user.salt);
   if (!valid) {
-    return json({ error: "Invalid email or password." }, { status: 401 });
+    return NextResponse.json(
+      { error: "Invalid email or password." },
+      { status: 401 },
+    );
   }
 
   const token = await signToken({ sub: user.id, email: user.email });
 
-  return json(
+  return NextResponse.json(
     { ok: true, user: { id: user.id, email: user.email } },
     {
       headers: { "Set-Cookie": buildSessionCookie(token) },
@@ -112,7 +124,7 @@ async function login(body: AuthBody) {
 }
 
 function logout() {
-  return json(
+  return NextResponse.json(
     { ok: true },
     {
       headers: { "Set-Cookie": buildClearSessionCookie() },
@@ -125,15 +137,15 @@ async function session() {
     const jar = await cookies();
     const token = jar.get(COOKIE_NAME)?.value;
     if (!token) {
-      return json({ authenticated: false });
+      return NextResponse.json({ authenticated: false });
     }
     const payload = await verifyToken(token);
-    return json({
+    return NextResponse.json({
       authenticated: true,
       user: { id: payload.sub, email: payload.email },
     });
   } catch {
-    return json({ authenticated: false });
+    return NextResponse.json({ authenticated: false });
   }
 }
 
@@ -141,11 +153,21 @@ export async function GET(
   _request: Request,
   context: { params: Promise<{ action: string }> },
 ) {
-  const { action } = await context.params;
-  if (action === "session") {
-    return session();
+  try {
+    const { action } = await context.params;
+    if (action === "session") {
+      return await session();
+    }
+    return NextResponse.json({ error: "Unknown auth action." }, { status: 404 });
+  } catch (error: unknown) {
+    const message =
+      error instanceof Error ? error.message : "Internal Server Error";
+    console.error("[api/auth GET]", error);
+    return NextResponse.json(
+      { error: message || "Internal Server Error" },
+      { status: 500 },
+    );
   }
-  return json({ error: "Unknown auth action." }, { status: 404 });
 }
 
 export async function POST(
@@ -159,7 +181,15 @@ export async function POST(
       return logout();
     }
 
-    const body = (await request.json()) as AuthBody;
+    let body: AuthBody;
+    try {
+      body = (await request.json()) as AuthBody;
+    } catch {
+      return NextResponse.json(
+        { error: "Request body must be valid JSON." },
+        { status: 400 },
+      );
+    }
 
     if (action === "register") {
       return await register(body);
@@ -168,13 +198,13 @@ export async function POST(
       return await login(body);
     }
 
-    return json({ error: "Unknown auth action." }, { status: 404 });
-  } catch (error) {
-    return json(
-      {
-        error:
-          error instanceof Error ? error.message : "Authentication failed.",
-      },
+    return NextResponse.json({ error: "Unknown auth action." }, { status: 404 });
+  } catch (error: unknown) {
+    const message =
+      error instanceof Error ? error.message : "Internal Server Error";
+    console.error("[api/auth POST]", error);
+    return NextResponse.json(
+      { error: message || "Internal Server Error" },
       { status: 500 },
     );
   }

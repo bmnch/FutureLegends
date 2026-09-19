@@ -212,6 +212,15 @@ export function OnboardingWizard({
         body: JSON.stringify({ email, password }),
       });
 
+      const contentType = response.headers.get("content-type");
+      if (!contentType?.includes("application/json")) {
+        const rawText = await response.text();
+        throw new Error(
+          rawText.trim() ||
+            `Unexpected non-JSON response (${response.status}).`,
+        );
+      }
+
       const data = (await response.json()) as {
         error?: string;
         user?: { id: string; email: string };
