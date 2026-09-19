@@ -1,7 +1,9 @@
 import Stripe from "stripe";
 import type { SyllabusOutline } from "@/lib/types";
 
-export const runtime = "edge";
+// Workers already executes at the edge; @opennextjs/cloudflare cannot load
+// Next.js `edge` runtime bundles, so route handlers must stay on nodejs.
+export const runtime = "nodejs";
 
 export async function POST(request: Request) {
   try {

@@ -2,15 +2,19 @@ import { NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import type { SyllabusOutline } from "@/lib/types";
 
-export const runtime = "edge";
+// Workers already executes at the edge; @opennextjs/cloudflare cannot load
+// Next.js `edge` runtime bundles, so route handlers must stay on nodejs.
+export const runtime = "nodejs";
 
-const MODEL = "@cf/meta/llama-3-8b-instruct";
+const MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
 
 const SYSTEM_PROMPT =
   "You are CiviorAI, a master curriculum architect. Based on the user's context, generate a highly specific, localized, and actionable 3-module syllabus. You MUST return ONLY valid JSON matching this exact structure: { \"courseTitle\": \"string\", \"modules\": [ { \"title\": \"string\", \"description\": \"string\", \"estimatedMinutes\": number, \"topics\": [\"string\", \"string\"] } ] }. Do not include markdown formatting, backticks, or conversational text. Output pure JSON.";
 
+// Workers AI models differ: some return `response` as a JSON string, newer ones
+// return an already-decoded object.
 type AiRunResult = {
-  response?: string;
+  response?: string | Record<string, unknown>;
 };
 
 function extractJson(text: string): unknown {
@@ -104,8 +108,8 @@ export async function POST(request: Request) {
       max_tokens: 2048,
     })) as AiRunResult;
 
-    const raw = result?.response?.trim();
-    if (!raw) {
+    const response = result?.response;
+    if (!response || (typeof response === "string" && !response.trim())) {
       return NextResponse.json(
         { error: "Workers AI returned an empty response." },
         { status: 500 },
@@ -114,7 +118,8 @@ export async function POST(request: Request) {
 
     let parsed: unknown;
     try {
-      parsed = extractJson(raw);
+      parsed =
+        typeof response === "string" ? extractJson(response) : response;
     } catch {
       return NextResponse.json(
         {

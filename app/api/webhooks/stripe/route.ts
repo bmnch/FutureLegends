@@ -1,6 +1,8 @@
 import Stripe from "stripe";
 
-export const runtime = "edge";
+// Workers already executes at the edge; @opennextjs/cloudflare cannot load
+// Next.js `edge` runtime bundles, so route handlers must stay on nodejs.
+export const runtime = "nodejs";
 
 /**
  * Stripe webhook listener for successful CiviorAI checkouts.

@@ -14,7 +14,9 @@ import {
   verifyToken,
 } from "@/src/lib/auth-crypto";
 
-export const runtime = "edge";
+// Workers already executes at the edge; @opennextjs/cloudflare cannot load
+// Next.js `edge` runtime bundles, so route handlers must stay on nodejs.
+export const runtime = "nodejs";
 
 type AuthBody = {
   email?: string;

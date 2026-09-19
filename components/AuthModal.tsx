@@ -62,9 +62,16 @@ export function AuthModal({
       const contentType = response.headers.get("content-type");
       if (!contentType?.includes("application/json")) {
         const rawText = await response.text();
+        console.error("[auth] non-JSON response", {
+          action,
+          status: response.status,
+          contentType,
+          body: rawText.slice(0, 1000),
+        });
         throw new Error(
-          rawText.trim() ||
-            `Unexpected non-JSON response (${response.status}).`,
+          `Server error (${response.status}): ${
+            rawText.trim().slice(0, 200) || "empty response body"
+          }`,
         );
       }
 
