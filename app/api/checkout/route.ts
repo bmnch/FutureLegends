@@ -28,7 +28,7 @@ export async function POST(request: Request) {
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
-      success_url: `${origin}/dashboard/${courseId}?session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${origin}/setup/${courseId}?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/?checkout=cancelled`,
       line_items: [
         {

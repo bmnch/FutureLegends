@@ -2,7 +2,12 @@ import { jwtVerify } from "jose";
 import { NextResponse, type NextRequest } from "next/server";
 import { COOKIE_NAME } from "@/src/lib/auth-crypto";
 
-const PROTECTED = [/^\/dashboard(\/.*)?$/, /^\/api\/checkout(\/.*)?$/];
+const PROTECTED = [
+  /^\/dashboard(\/.*)?$/,
+  /^\/setup(\/.*)?$/,
+  /^\/api\/checkout(\/.*)?$/,
+  /^\/api\/courses\/generate(\/.*)?$/,
+];
 
 function getSecret(): Uint8Array | null {
   const secret = process.env.JWT_SECRET;
@@ -52,5 +57,14 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard", "/dashboard/:path*", "/api/checkout", "/api/checkout/:path*"],
+  matcher: [
+    "/dashboard",
+    "/dashboard/:path*",
+    "/setup",
+    "/setup/:path*",
+    "/api/checkout",
+    "/api/checkout/:path*",
+    "/api/courses/generate",
+    "/api/courses/generate/:path*",
+  ],
 };
