@@ -26,7 +26,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${display.variable} ${mono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-background text-foreground">
+      <body className="flex min-h-full flex-col bg-neutral-950 text-foreground">
         {children}
       </body>
     </html>

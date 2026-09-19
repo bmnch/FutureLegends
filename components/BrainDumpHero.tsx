@@ -1,7 +1,16 @@
 "use client";
 
-import { useId, useState, type FormEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type FormEvent,
+} from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import type { SyllabusOutline } from "@/lib/types";
+import { AnimatedOrbs } from "@/components/AnimatedOrbs";
 import { SyllabusOutlineView } from "@/components/SyllabusOutlineView";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
 
@@ -10,11 +19,26 @@ const PLACEHOLDER =
 
 export function BrainDumpHero() {
   const textareaId = useId();
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const reduceMotion = useReducedMotion();
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [syllabus, setSyllabus] = useState<SyllabusOutline | null>(null);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+
+  const hasTyped = text.trim().length > 0;
+
+  const autoResize = useCallback(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.max(el.scrollHeight, 160)}px`;
+  }, []);
+
+  useEffect(() => {
+    autoResize();
+  }, [text, autoResize]);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -83,96 +107,153 @@ export function BrainDumpHero() {
   return (
     <section
       aria-labelledby="brain-dump-heading"
-      className="relative grid-atmosphere min-h-[100svh] w-full"
+      className="relative isolate min-h-[100svh] w-full overflow-hidden bg-neutral-950"
     >
-      <div className="mx-auto flex min-h-[100svh] w-full max-w-4xl flex-col justify-center px-6 py-16 sm:px-8">
-        <p className="mb-3 font-mono text-xs uppercase tracking-[0.28em] text-neon">
+      <AnimatedOrbs />
+
+      <div className="relative z-10 mx-auto flex min-h-[100svh] w-full max-w-3xl flex-col items-center justify-center px-6 py-20 text-center sm:px-8">
+        <motion.p
+          initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="mb-5 font-mono text-xs uppercase tracking-[0.32em] text-cyan-300"
+        >
           CiviorAI
-        </p>
-        <h1
+        </motion.p>
+
+        <motion.h1
           id="brain-dump-heading"
-          className="max-w-3xl text-4xl font-semibold leading-tight tracking-tight text-foreground sm:text-5xl"
+          initial={reduceMotion ? false : { opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.55, delay: 0.05 }}
+          className="max-w-3xl text-4xl font-bold leading-[1.1] tracking-tight text-white sm:text-5xl md:text-6xl"
         >
-          Brain dump today. Walk into tomorrow prepared.
-        </h1>
-        <p className="mt-4 max-w-2xl text-base leading-relaxed text-muted sm:text-lg">
-          Spill the context — school, job, city, constraints. We turn it into a
-          highly specific, localized syllabus you can unlock and narrate.
-        </p>
+          Don&apos;t search for the answer. Generate the course.
+        </motion.h1>
 
-        <form
+        <motion.p
+          initial={reduceMotion ? false : { opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.55, delay: 0.12 }}
+          className="gradient-text mt-5 max-w-2xl text-base leading-relaxed sm:text-lg"
+        >
+          Tell us exactly what you need to master today, and our AI will build a
+          localized, interactive curriculum just for you in seconds.
+        </motion.p>
+
+        <motion.form
           onSubmit={onSubmit}
-          className="mt-10 flex flex-col gap-5"
           aria-busy={loading}
+          initial={reduceMotion ? false : { opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.55, delay: 0.18 }}
+          className="mt-10 w-full text-left"
         >
-          <div className="flex flex-col gap-2">
-            <label
-              htmlFor={textareaId}
-              className="text-sm font-medium text-foreground"
-            >
-              Describe your situation and what you need to learn today.
-            </label>
-            <textarea
-              id={textareaId}
-              name="brainDump"
-              rows={8}
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              placeholder={PLACEHOLDER}
-              disabled={loading}
-              aria-required="true"
-              aria-invalid={Boolean(error) && !text.trim()}
-              aria-describedby={error ? "brain-dump-error" : "brain-dump-hint"}
-              className="w-full resize-y rounded-md border border-border bg-surface px-4 py-4 text-base leading-relaxed text-foreground placeholder:text-zinc-600 neon-glow focus:border-neon disabled:opacity-60"
-            />
-            <p id="brain-dump-hint" className="font-mono text-xs text-muted">
-              Tip: include city, institution, workplace, and deadlines.
-            </p>
+          <div className="glass-panel rounded-2xl bg-white/5 p-4 shadow-[0_0_40px_rgba(0,255,255,0.1)] backdrop-blur-lg sm:p-5">
+            <AnimatePresence mode="wait" initial={false}>
+              {loading ? (
+                <motion.div
+                  key="loader"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <SkeletonLoader />
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="input"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="flex flex-col gap-4"
+                >
+                  <label
+                    htmlFor={textareaId}
+                    className="text-sm font-medium text-neutral-200"
+                  >
+                    Describe your situation and what you need to learn today.
+                  </label>
+                  <textarea
+                    ref={textareaRef}
+                    id={textareaId}
+                    name="brainDump"
+                    rows={5}
+                    value={text}
+                    onChange={(e) => setText(e.target.value)}
+                    placeholder={PLACEHOLDER}
+                    aria-required="true"
+                    aria-invalid={Boolean(error) && !text.trim()}
+                    aria-describedby={
+                      error ? "brain-dump-error" : "brain-dump-hint"
+                    }
+                    className="w-full resize-none border-0 bg-transparent px-1 py-2 text-base leading-relaxed text-white placeholder:text-neutral-500 focus:outline-none focus:ring-0"
+                  />
+                  <p id="brain-dump-hint" className="text-xs text-neutral-500">
+                    Tip: include city, institution, workplace, and deadlines.
+                  </p>
+                  <div className="flex flex-col gap-3 border-t border-white/10 pt-4 sm:flex-row sm:items-center sm:justify-between">
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className={`inline-flex h-12 items-center justify-center rounded-xl bg-cyan-400 px-6 text-sm font-semibold tracking-wide text-neutral-950 transition hover:bg-cyan-300 hover:shadow-[0_0_28px_rgba(34,211,238,0.55)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 disabled:cursor-not-allowed disabled:opacity-60 ${
+                        hasTyped ? "btn-pulse-cyan" : ""
+                      }`}
+                    >
+                      Generate Custom Syllabus
+                    </button>
+                    <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-violet-300/80">
+                      Edge AI · Localized
+                    </span>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="inline-flex h-12 w-full items-center justify-center rounded-md bg-neon px-6 text-sm font-semibold tracking-wide text-black transition hover:bg-neon-hot focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neon disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
-          >
-            {loading ? "Generating…" : "Generate Custom Syllabus"}
-          </button>
-        </form>
+        </motion.form>
 
         {error ? (
           <p
             id="brain-dump-error"
             role="alert"
-            className="mt-4 text-sm text-danger"
+            className="mt-4 text-sm text-rose-400"
           >
             {error}
           </p>
         ) : null}
 
-        {loading ? <SkeletonLoader /> : null}
+        <AnimatePresence>
+          {syllabus && !loading ? (
+            <motion.div
+              initial={{ opacity: 0, y: 28 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 12 }}
+              transition={{ duration: 0.5 }}
+              className="mt-12 w-full space-y-8 text-left"
+            >
+              <SyllabusOutlineView syllabus={syllabus} />
 
-        {syllabus && !loading ? (
-          <div className="mt-12 space-y-8">
-            <SyllabusOutlineView syllabus={syllabus} />
-            <div className="border-t border-border pt-6">
-              <button
-                type="button"
-                onClick={startCheckout}
-                disabled={checkoutLoading}
-                aria-label="Unlock and narrate full course for four dollars and ninety-nine cents"
-                className="inline-flex h-12 w-full items-center justify-center rounded-md border border-neon bg-transparent px-6 text-sm font-semibold tracking-wide text-neon transition hover:bg-neon hover:text-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neon disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
-              >
-                {checkoutLoading
-                  ? "Redirecting to checkout…"
-                  : "Unlock & Narrate Full Course - $4.99"}
-              </button>
-              <p className="mt-3 text-xs text-muted">
-                Checkout unlocks the full intensive expansion and AI voice
-                narration.
-              </p>
-            </div>
-          </div>
-        ) : null}
+              <div className="flex flex-col items-center gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={startCheckout}
+                  disabled={checkoutLoading}
+                  aria-label="Unlock and narrate full course for four dollars and ninety-nine cents"
+                  className="btn-pulse-cyan inline-flex h-14 w-full max-w-md items-center justify-center rounded-2xl bg-gradient-to-r from-cyan-400 via-cyan-300 to-violet-400 px-6 text-sm font-bold tracking-wide text-neutral-950 transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {checkoutLoading
+                    ? "Redirecting to checkout…"
+                    : "Unlock & Narrate Full Course - $4.99"}
+                </button>
+                <p className="text-xs text-neutral-500">
+                  Unlocks full intensive expansion and AI voice narration.
+                </p>
+              </div>
+            </motion.div>
+          ) : null}
+        </AnimatePresence>
       </div>
     </section>
   );
