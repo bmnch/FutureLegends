@@ -11,15 +11,15 @@ binding = "ASSETS"
 [ai]
 binding = "AI"
 
+[observability]
+enabled = true
+
+[vars]
+APP_NAME = "CiviorAI"
+
+# Production D1 binding (from `npx wrangler d1 info civior-db`)
 [[d1_databases]]
 binding = "DB"
 database_name = "civior-db"
 database_id = "ee102c7c-5afe-4c20-a02d-e278eedb38c6"
 migrations_dir = "drizzle"
-
-[observability]
-enabled = true
-
-# Pages project alias used by Wrangler Pages commands
-[vars]
-APP_NAME = "CiviorAI"
