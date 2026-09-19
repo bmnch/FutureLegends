@@ -1,7 +1,7 @@
 # CiviorAI — Cloudflare Workers (OpenNext) for Next.js App Router edge
 name = "civior-ai"
 main = ".open-next/worker.js"
-compatibility_date = "2025-09-19"
+compatibility_date = "2026-09-19"
 compatibility_flags = ["nodejs_compat"]
 
 [assets]
