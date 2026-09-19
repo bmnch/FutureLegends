@@ -1,23 +1,16 @@
 export type SyllabusModule = {
-  id: string;
   title: string;
-  summary: string;
-  localContext?: string;
+  description: string;
   estimatedMinutes: number;
-  lessons: Array<{
-    id: string;
-    title: string;
-    objective: string;
-  }>;
+  topics: string[];
 };
 
 export type SyllabusOutline = {
-  title: string;
-  locale: string;
-  audience: string;
-  learningGoals: string[];
+  courseTitle: string;
   modules: SyllabusModule[];
   rawBrainDump?: string;
+  /** @deprecated Prefer courseTitle — kept for checkout metadata aliases */
+  title?: string;
 };
 
 export type CourseContent = {

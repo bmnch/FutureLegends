@@ -1,105 +1,17 @@
+import { NextResponse } from "next/server";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 import type { SyllabusOutline } from "@/lib/types";
 
 export const runtime = "edge";
 
-const MODEL = "@cf/qwen/qwen3.8-27b";
+const MODEL = "@cf/meta/llama-3-8b-instruct";
 
-const SYSTEM_PROMPT = `You are CiviorAI, an expert curriculum designer for hyper-localized onboarding.
-Given a user's brain dump, return ONLY valid JSON (no markdown fences) matching:
-{
-  "title": string,
-  "locale": string,
-  "audience": string,
-  "learningGoals": string[],
-  "modules": [
-    {
-      "id": string,
-      "title": string,
-      "summary": string,
-      "localContext": string,
-      "estimatedMinutes": number,
-      "lessons": [
-        { "id": string, "title": string, "objective": string }
-      ]
-    }
-  ]
-}
-Make the syllabus highly specific to the user's city, institutions, transit, banking, workplace rights, and timeline. Prefer concrete local names and actionable steps.`;
+const SYSTEM_PROMPT =
+  "You are CiviorAI, a master curriculum architect. Based on the user's context, generate a highly specific, localized, and actionable 3-module syllabus. You MUST return ONLY valid JSON matching this exact structure: { \"courseTitle\": \"string\", \"modules\": [ { \"title\": \"string\", \"description\": \"string\", \"estimatedMinutes\": number, \"topics\": [\"string\", \"string\"] } ] }. Do not include markdown formatting, backticks, or conversational text. Output pure JSON.";
 
-function fallbackSyllabus(brainDump: string): SyllabusOutline {
-  return {
-    title: "Localized Onboarding Intensive",
-    locale: "Inferred from your brain dump",
-    audience: "Learner with a new work + city context",
-    learningGoals: [
-      "Navigate local transit confidently for work shifts",
-      "Set up payroll-ready banking",
-      "Understand core workplace rights for your role",
-    ],
-    modules: [
-      {
-        id: "mod-transit",
-        title: "Transit & First-Week Commute",
-        summary:
-          "Map routes, fare options, and backup paths from your location to work.",
-        localContext:
-          "Derived from locations mentioned in your brain dump (campus / downtown / workplace).",
-        estimatedMinutes: 35,
-        lessons: [
-          {
-            id: "les-route",
-            title: "Primary commute plan",
-            objective: "Identify the fastest reliable route for peak hours.",
-          },
-          {
-            id: "les-backup",
-            title: "Disruption fallback",
-            objective: "Prepare an alternate route and timing buffer.",
-          },
-        ],
-      },
-      {
-        id: "mod-banking",
-        title: "Payroll Banking Setup",
-        summary: "Open/update accounts and direct deposit for your employer.",
-        localContext: "Local bank / credit union options near your workplace.",
-        estimatedMinutes: 40,
-        lessons: [
-          {
-            id: "les-account",
-            title: "Account checklist",
-            objective: "Confirm ID, address, and deposit requirements.",
-          },
-          {
-            id: "les-deposit",
-            title: "Direct deposit forms",
-            objective: "Complete employer payroll banking details correctly.",
-          },
-        ],
-      },
-      {
-        id: "mod-rights",
-        title: "Workplace Rights Snapshot",
-        summary: "Breaks, wages, scheduling, and who to contact for issues.",
-        localContext: "Jurisdiction-specific rules for your workplace type.",
-        estimatedMinutes: 45,
-        lessons: [
-          {
-            id: "les-basics",
-            title: "Protected basics",
-            objective: "Know minimum wage, breaks, and overtime triggers.",
-          },
-          {
-            id: "les-escalate",
-            title: "Escalation path",
-            objective: "Document issues and use the correct complaint channel.",
-          },
-        ],
-      },
-    ],
-    rawBrainDump: brainDump,
-  };
-}
+type AiRunResult = {
+  response?: string;
+};
 
 function extractJson(text: string): unknown {
   const trimmed = text.trim();
@@ -115,113 +27,124 @@ function extractJson(text: string): unknown {
   }
 }
 
-async function runWorkersAi(prompt: string): Promise<string> {
-  // Prefer Workers AI REST when credentials are present (works in local + edge).
-  const accountId = process.env.CF_ACCOUNT_ID;
-  const apiToken = process.env.CF_API_TOKEN;
+function normalizeSyllabus(
+  parsed: Record<string, unknown>,
+  userContext: string,
+): SyllabusOutline {
+  const courseTitle =
+    (typeof parsed.courseTitle === "string" && parsed.courseTitle) ||
+    (typeof parsed.title === "string" && parsed.title) ||
+    "CiviorAI Custom Syllabus";
 
-  if (accountId && apiToken) {
-    const response = await fetch(
-      `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/${MODEL}`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          messages: [
-            { role: "system", content: SYSTEM_PROMPT },
-            { role: "user", content: prompt },
-          ],
-          max_tokens: 2048,
-        }),
-      },
-    );
+  const rawModules = Array.isArray(parsed.modules) ? parsed.modules : [];
+  const modules = rawModules.map((item) => {
+    const module = (item ?? {}) as Record<string, unknown>;
+    const topics = Array.isArray(module.topics)
+      ? module.topics.filter((t): t is string => typeof t === "string")
+      : [];
 
-    if (!response.ok) {
-      const detail = await response.text();
-      throw new Error(`Workers AI request failed: ${response.status} ${detail}`);
-    }
-
-    const payload = (await response.json()) as {
-      result?: { response?: string; message?: { content?: string } };
+    return {
+      title: typeof module.title === "string" ? module.title : "Untitled module",
+      description:
+        typeof module.description === "string"
+          ? module.description
+          : typeof module.summary === "string"
+            ? module.summary
+            : "",
+      estimatedMinutes:
+        typeof module.estimatedMinutes === "number"
+          ? module.estimatedMinutes
+          : 30,
+      topics,
     };
+  });
 
-    const content =
-      payload.result?.response ??
-      payload.result?.message?.content ??
-      "";
-
-    if (!content) {
-      throw new Error("Workers AI returned an empty response.");
-    }
-
-    return content;
+  if (modules.length === 0) {
+    throw new Error("Syllabus JSON did not include any modules.");
   }
 
-  // OpenNext / Workers binding path when deployed with [ai] binding.
-  try {
-    const { getCloudflareContext } = await import("@opennextjs/cloudflare");
-    const { env } = await getCloudflareContext({ async: true });
-    const ai = (env as { AI?: { run: (model: string, input: unknown) => Promise<unknown> } }).AI;
-
-    if (ai?.run) {
-      const result = (await ai.run(MODEL, {
-        messages: [
-          { role: "system", content: SYSTEM_PROMPT },
-          { role: "user", content: prompt },
-        ],
-        max_tokens: 2048,
-      })) as { response?: string };
-
-      if (result?.response) return result.response;
-    }
-  } catch {
-    // Binding unavailable in local Next.js without Wrangler proxy.
-  }
-
-  throw new Error(
-    "Workers AI is not configured. Set CF_ACCOUNT_ID and CF_API_TOKEN, or deploy with an AI binding.",
-  );
+  return {
+    courseTitle,
+    title: courseTitle,
+    modules,
+    rawBrainDump: userContext,
+  };
 }
 
 export async function POST(request: Request) {
   try {
-    const body = (await request.json()) as { brainDump?: string };
-    const brainDump = body.brainDump?.trim();
+    const body = (await request.json()) as {
+      userContext?: string;
+      brainDump?: string;
+    };
 
-    if (!brainDump) {
-      return Response.json(
-        { error: "brainDump is required." },
+    const userContext = (body.userContext ?? body.brainDump)?.trim();
+    if (!userContext) {
+      return NextResponse.json(
+        { error: "userContext is required." },
         { status: 400 },
       );
     }
 
-    let syllabus: SyllabusOutline;
+    const { env } = await getCloudflareContext({ async: true });
+    const ai = (env as CloudflareEnv).AI;
 
-    try {
-      const raw = await runWorkersAi(
-        `Create a localized JSON syllabus for this brain dump:\n\n${brainDump}`,
+    if (!ai?.run) {
+      return NextResponse.json(
+        { error: "Cloudflare Workers AI binding is unavailable." },
+        { status: 500 },
       );
-      const parsed = extractJson(raw) as SyllabusOutline;
-      syllabus = {
-        ...parsed,
-        rawBrainDump: brainDump,
-        modules: parsed.modules ?? [],
-        learningGoals: parsed.learningGoals ?? [],
-      };
-    } catch {
-      // Keep onboarding usable before Cloudflare credentials are wired.
-      syllabus = fallbackSyllabus(brainDump);
     }
 
-    return Response.json({ syllabus });
+    const result = (await ai.run(MODEL, {
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT },
+        { role: "user", content: userContext },
+      ],
+      max_tokens: 2048,
+    })) as AiRunResult;
+
+    const raw = result?.response?.trim();
+    if (!raw) {
+      return NextResponse.json(
+        { error: "Workers AI returned an empty response." },
+        { status: 500 },
+      );
+    }
+
+    let parsed: unknown;
+    try {
+      parsed = extractJson(raw);
+    } catch {
+      return NextResponse.json(
+        {
+          error:
+            "Failed to parse syllabus JSON from the model. Please try again.",
+        },
+        { status: 500 },
+      );
+    }
+
+    if (!parsed || typeof parsed !== "object") {
+      return NextResponse.json(
+        { error: "Syllabus payload was not a valid JSON object." },
+        { status: 500 },
+      );
+    }
+
+    const syllabus = normalizeSyllabus(
+      parsed as Record<string, unknown>,
+      userContext,
+    );
+
+    return NextResponse.json({ syllabus });
   } catch (error) {
-    return Response.json(
+    return NextResponse.json(
       {
         error:
-          error instanceof Error ? error.message : "Failed to generate outline.",
+          error instanceof Error
+            ? error.message
+            : "Failed to generate outline.",
       },
       { status: 500 },
     );

@@ -114,7 +114,7 @@ export function OnboardingWizard({ initialAuthRequired = false }: Props) {
       return;
     }
 
-    const payload = buildBrainDump(brainDump, primaryGoal);
+    const userContext = buildBrainDump(brainDump, primaryGoal);
     setGenerating(true);
     setError(null);
     setSyllabus(null);
@@ -124,7 +124,7 @@ export function OnboardingWizard({ initialAuthRequired = false }: Props) {
       const response = await fetch("/api/generate-outline", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ brainDump: payload }),
+        body: JSON.stringify({ userContext }),
       });
 
       const data = (await response.json()) as {
@@ -136,7 +136,7 @@ export function OnboardingWizard({ initialAuthRequired = false }: Props) {
         throw new Error(data.error ?? "Failed to generate syllabus.");
       }
 
-      setSyllabus({ ...data.syllabus, rawBrainDump: payload });
+      setSyllabus({ ...data.syllabus, rawBrainDump: userContext });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
       goTo(2);

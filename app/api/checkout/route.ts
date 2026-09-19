@@ -46,7 +46,9 @@ export async function POST(request: Request) {
       ],
       metadata: {
         courseId,
-        syllabusTitle: body.syllabus.title?.slice(0, 400) ?? "CiviorAI Course",
+        syllabusTitle: body.syllabus.courseTitle?.slice(0, 400) ??
+          body.syllabus.title?.slice(0, 400) ??
+          "CiviorAI Course",
         // Compact pointer — full syllabus should be stored server-side in production.
         brainDumpPreview: (body.syllabus.rawBrainDump ?? "").slice(0, 450),
       },
