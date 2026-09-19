@@ -27,6 +27,7 @@ const BRAIN_DUMP_PLACEHOLDER =
 
 type Props = {
   initialAuthRequired?: boolean;
+  initialAuthenticated?: boolean;
 };
 
 type Direction = 1 | -1;
@@ -51,7 +52,10 @@ function buildBrainDump(brainDump: string, primaryGoal: string): string {
   ].join("\n");
 }
 
-export function OnboardingWizard({ initialAuthRequired = false }: Props) {
+export function OnboardingWizard({
+  initialAuthRequired = false,
+  initialAuthenticated = false,
+}: Props) {
   const brainDumpId = useId();
   const emailId = useId();
   const passwordId = useId();
@@ -65,7 +69,7 @@ export function OnboardingWizard({ initialAuthRequired = false }: Props) {
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [syllabus, setSyllabus] = useState<SyllabusOutline | null>(null);
-  const [authenticated, setAuthenticated] = useState(false);
+  const [authenticated, setAuthenticated] = useState(initialAuthenticated);
   const [authMode, setAuthMode] = useState<AuthMode>("register");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -80,6 +84,10 @@ export function OnboardingWizard({ initialAuthRequired = false }: Props) {
     el.style.height = "auto";
     el.style.height = `${Math.max(el.scrollHeight, 140)}px`;
   }, []);
+
+  useEffect(() => {
+    setAuthenticated(initialAuthenticated);
+  }, [initialAuthenticated]);
 
   useEffect(() => {
     autoResize();
