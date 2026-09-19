@@ -1,0 +1,19 @@
+# CiviorAI — Cloudflare Workers (OpenNext) for Next.js App Router edge
+name = "civior-ai"
+main = ".open-next/worker.js"
+compatibility_date = "2025-09-19"
+compatibility_flags = ["nodejs_compat"]
+
+[assets]
+directory = ".open-next/assets"
+binding = "ASSETS"
+
+[ai]
+binding = "AI"
+
+[observability]
+enabled = true
+
+# Pages project alias used by Wrangler Pages commands
+[vars]
+APP_NAME = "CiviorAI"

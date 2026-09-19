@@ -1,0 +1,104 @@
+@import "tailwindcss";
+
+:root {
+  --background: #000000;
+  --foreground: #f4f4f5;
+  --muted: #a1a1aa;
+  --surface: #0a0a0a;
+  --surface-elevated: #111111;
+  --border: #27272a;
+  --neon: #00ffd1;
+  --neon-dim: #00ffd133;
+  --neon-hot: #c8ff00;
+  --danger: #ff3b6b;
+  --focus-ring: #00ffd1;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-surface: var(--surface);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-border: var(--border);
+  --color-neon: var(--neon);
+  --color-neon-dim: var(--neon-dim);
+  --color-neon-hot: var(--neon-hot);
+  --color-danger: var(--danger);
+  --font-sans: var(--font-display);
+  --font-mono: var(--font-mono);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-display), ui-sans-serif, sans-serif;
+  min-height: 100%;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--neon) 40%, transparent);
+  color: #000;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 3px;
+}
+
+@keyframes pulse-neon {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    #111 0%,
+    #1a1a1a 40%,
+    #111 80%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+.neon-glow {
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--neon) 55%, transparent),
+    0 0 24px color-mix(in srgb, var(--neon) 22%, transparent);
+}
+
+.grid-atmosphere {
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -10%, #00ffd122, transparent 55%),
+    linear-gradient(to bottom, transparent, #000 70%),
+    linear-gradient(rgba(0, 255, 209, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 209, 0.04) 1px, transparent 1px);
+  background-size:
+    100% 100%,
+    100% 100%,
+    48px 48px,
+    48px 48px;
+}
